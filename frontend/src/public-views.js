@@ -1,3 +1,4 @@
+import {contestRegulation, documentResource} from './documents-public.js';
 import {partnersView} from './partners-public.js';
 import {mediaView} from './media.js';
 import {contactView} from './contact.js';
@@ -52,8 +53,8 @@ function articleView(s) {
 }
 
 function rulesView(s) {
-  const rules = s.content.find(c => c.slug==='contest-regulation-draft') || s.content.find(c => /rules|regulation|polozhenie/.test(c.slug));
-  return `${back('/about', 'about', 'О конкурсе')}<article class="reading-page"><h1 tabindex="-1">Положение о конкурсе</h1>${rules?.extra?.draft?'<p class="reading-lead">Проект документа. Не утверждён организатором.</p>':''}${rules ? rules.extra?.sections ? rules.extra.sections.map(([title,body])=>`<section><h2>${e(title)}</h2><p>${e(body)}</p></section>`).join('') : `<div class="reading-body">${e(rules.body)}</div>` : '<p class="reading-lead">Утверждённое положение ещё не опубликовано.</p><p>В этом разделе должны быть доступны утверждённые правила: категории участников, сроки регистрации и подачи проектов, требования к оформлению, критерии оценки и порядок награждения. Техническое задание описывает устройство сайта, но не заменяет Положение о конкурсе.</p>'}<section class="reading-next"><h2>Подготовься к участию</h2><p>Узнай, как устроены тестирование, подача проекта и работа в личном кабинете.</p>${link('/participation', 'participation', 'Как участвовать')}</section></article>`;
+  const rules = contestRegulation(s.content);
+  return `${back('/about', 'about', 'О конкурсе')}<article class="reading-page"><h1 tabindex="-1">Положение о конкурсе</h1>${rules?.extra?.draft?'<p class="reading-lead">Проект документа. Не утверждён организатором.</p>':''}${rules ? rules.extra?.sections ? rules.extra.sections.map(([title,body])=>`<section><h2>${e(title)}</h2><p>${e(body)}</p></section>`).join('') : `<div class="reading-body">${e(rules.body)}</div>` : '<p class="reading-lead">Утверждённое положение ещё не опубликовано.</p><p>В этом разделе должны быть доступны утверждённые правила: категории участников, сроки регистрации и подачи проектов, требования к оформлению, критерии оценки и порядок награждения. Техническое задание описывает устройство сайта, но не заменяет Положение о конкурсе.</p>'}${documentResource(rules)}<section class="reading-next"><h2>Подготовься к участию</h2><p>Узнай, как устроены тестирование, подача проекта и работа в личном кабинете.</p>${link('/participation', 'participation', 'Как участвовать')}</section></article>`;
 }
 
 function helpView() {

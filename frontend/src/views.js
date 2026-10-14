@@ -1,3 +1,4 @@
+import {participationDocuments} from './documents-public.js';
 import {homeBanners} from './home-banners.js';
 import {contestPath} from './contest-path.js';
 import { projectOutcome, defensesPanel } from './review-components.js';
@@ -59,6 +60,7 @@ export function participationView(s) {
     ${contestPath(s)}
     <section class="submission-desk" id="submission-requirements"><div><h2>Что приложить к работе</h2><p>В основном документе покажи вопрос, цель, метод, собственные результаты и выводы. Для чужих фактов и изображений укажи авторов и источники. Наставник может проверить материалы до отправки.</p></div><dl class="document-specs"><div><dt>Исследование</dt><dd>PDF или DOCX <span>обязательно</span></dd></div><div><dt>Презентация</dt><dd>PDF или PPTX <span>по желанию</span></dd></div><div><dt>Видео</dt><dd>MP4, WebM или ссылка <span>по желанию</span></dd></div><div><dt>Размер файла</dt><dd>До 30 МБ</dd></div></dl></section>
     <section class="public-section public-faq"><h2>Вопросы перед стартом</h2><details><summary>Нужен ли готовый проект при регистрации?</summary><p>Нет. Сначала можно изучить материалы и пройти тест. Первую идею проекта сохрани в черновике и возвращайся к ней по мере подготовки.</p></details><details><summary>Можно ли остановить тест и вернуться позже?</summary><p>Сохранённые ответы останутся в кабинете, но время попытки не останавливается. При возврате ты продолжишь тот же тест с оставшимся временем.</p></details><details><summary>Где посмотреть сертификат и оценку проекта?</summary><p>Сертификат доступен в кабинете после завершения теста. Оценки проекта и комментарии экспертов появятся после публикации результатов организатором.</p></details><details><summary>Как выбрать тему исследования?</summary><p>Начни с одного конкретного вопроса. Определи, какие источники или наблюдения помогут на него ответить, и обсуди план с педагогом.</p><a class="text-link" href="/materials/idea" data-article="idea">Заметка о выборе темы ${icon('arrow')}</a></details></section>
+    ${participationDocuments(s.content)}
     <div class="public-action"><div><h2>Начать участие</h2><p>Тест, черновики и результаты находятся в твоём кабинете.</p></div>${button(s.user ? 'Открыть кабинет' : 'Начать участие', go('dashboard'))}</div>
   </div>`;
 }
