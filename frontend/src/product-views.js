@@ -1,9 +1,8 @@
+import {contestPath} from './contest-path.js';
 import {escapeHtml as e,heading,icon,button} from './ui.js';
 
 export function journey(s){
-  const passed=s.attempts.some(a=>a.passed===true),sent=s.projects.some(p=>p.status!=='draft'),rated=s.projects.some(p=>p.reviews_released);
-  const steps=[['Первый этап: тест',passed,passed?'Проходной результат достигнут':`Набери минимум ${s.config?.pass_percent??60}%. Обучение необязательно.`,'dashboard'],['Второй этап: работа',rated,rated?'Оценки опубликованы':sent?'Материалы отправлены, следи за проверкой':passed?'Подготовь исследование и обсуди его с наставником':'Откроется после проходного результата теста',passed?'project':'dashboard']];
-  return `<section class="participant-journey"><div><h2>Два этапа конкурса</h2><p>Сначала тестирование, затем работа и экспертиза по выбранному направлению.</p></div><ol>${steps.map(([title,done,description,route],i)=>`<li class="${done?'done':''}"><span>${done?icon('check'):String(i+1).padStart(2,'0')}</span><a href="/#${route}" data-route="${route}"><strong>${title}</strong><small>${description}</small></a></li>`).join('')}</ol></section>`;
+  return `<section class="participant-journey"><div><h2>Мой прогресс</h2><p>Выполненные задачи отмечаются по данным твоего аккаунта.</p></div>${contestPath(s,true)}</section>`;
 }
 export function awardsView(s){
   const certs=s.certificates;

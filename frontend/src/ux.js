@@ -11,7 +11,8 @@ export function polishPage(state) {
   const cover=document.querySelector('.north-cover');
   if(cover&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
     const snow=document.createElement('div');snow.className='polar-snow';snow.setAttribute('aria-hidden','true');
-    for(let i=0;i<12;i++){const flake=document.createElement('span');flake.style.left=`${8+i*7}%`;flake.style.top=`${10+(i%4)*18}%`;snow.append(flake);}
+    for(let i=0;i<12;i++){const flake=document.createElement('span');flake.style.left=`${8+i*7}%`;flake.style.top='-12px';flake.style.setProperty('--fall-duration',`${9+i%5}s`);flake.style.setProperty('--fall-delay',`${-i*1.3}s`);snow.append(flake);}
+    snow.style.setProperty('--snow-distance',`${Math.max(cover.clientHeight,700)+80}px`);
     cover.append(snow);
   }
   if(state.route==='people'&&state.user?.role==='admin'){
