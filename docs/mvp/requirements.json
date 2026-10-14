@@ -500,8 +500,8 @@
   {
     "id": "TZ-084",
     "requirement": "Дашборд: количество участников, проектов, регионов, школ.",
-    "status": "требует поэлементной приёмки; наличие кода не считается доказательством полного выполнения",
-    "evidence": ""
+    "status": "реализовано и проверено локально в браузере; требуется итоговая приёмка на сервере",
+    "evidence": "frontend/src/console.js; frontend/src/region-map.js; output/release/analytics-map-e2e.json: счётчики, геокарта, таблица, четыре ширины, JSON-выгрузка"
   },
   {
     "id": "TZ-085",
@@ -524,8 +524,8 @@
   {
     "id": "TZ-088",
     "requirement": "Геокарта участников.",
-    "status": "не реализовано: вместо карты есть региональные диаграммы",
-    "evidence": "frontend/src/console.js; backend/app/admin.py/stats"
+    "status": "реализовано и проверено локально в браузере; требуется итоговая приёмка на сервере",
+    "evidence": "frontend/src/console.js; frontend/src/region-map.js; output/release/analytics-map-e2e.json: счётчики, геокарта, таблица, четыре ширины, JSON-выгрузка"
   },
   {
     "requirement": "19. Интеграции",

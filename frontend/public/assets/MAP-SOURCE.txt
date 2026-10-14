@@ -1,0 +1,6 @@
+Географическая основа: Natural Earth, admin 1 states/provinces, масштаб 1:10m.
+Источник: https://github.com/nvkelso/natural-earth-vector
+Файл: geojson/ne_10m_admin_1_states_provinces.geojson
+Условия: public domain. Геометрия упрощена для SVG; это статистическая схема, не навигационная карта.
+Подготовлено 15 октября 2026. Название Алтайского края исправлено по коду RU-ALT.
+SHA256 исходного GeoJSON: 22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5
