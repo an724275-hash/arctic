@@ -1,10 +1,19 @@
 import './ux.css';
+import './motion.css';
 import {accountForm} from './account-form.js';
+let introPlayed=false;
 
 export function polishPage(state) {
   const main=document.querySelector('#content');
   main?.setAttribute('aria-busy',String(state.loading));
   main?.querySelector('h1')?.setAttribute('tabindex','-1');
+  if(!introPlayed&&!state.loading)requestAnimationFrame(()=>{if(introPlayed)return;document.querySelector('.brand-mark')?.setAttribute('data-motion-intro','');introPlayed=true;});
+  const cover=document.querySelector('.north-cover');
+  if(cover&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+    const snow=document.createElement('div');snow.className='polar-snow';snow.setAttribute('aria-hidden','true');
+    for(let i=0;i<12;i++){const flake=document.createElement('span');flake.style.left=`${8+i*7}%`;flake.style.top=`${10+(i%4)*18}%`;snow.append(flake);}
+    cover.append(snow);
+  }
   if(state.route==='people'&&state.user?.role==='admin'){
     const details=document.createElement('details');details.className='panel account-creation';details.innerHTML=accountForm();
     main.querySelector('.console-content')?.append(details);

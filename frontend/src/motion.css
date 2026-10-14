@@ -1,0 +1,26 @@
+.brand-mark[data-motion-intro] path:first-child { stroke-dasharray:150; animation:compass-trace 850ms cubic-bezier(.22,1,.36,1) both; }
+.brand-mark[data-motion-intro] path:nth-child(2) { animation:mountain-arrive 600ms 200ms ease-out both; transform-origin:center; }
+.polar-snow { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1; border-radius:inherit; }
+.polar-snow span { position:absolute; top:12%; width:4px; height:4px; border-radius:50%; background:#fff; animation:snow-arrive 4.6s ease-out both; }
+.polar-snow span:nth-child(3n) { width:2px; height:2px; }
+.nav-group[open] .nav-panel { animation:menu-arrive 150ms ease-out; transform-origin:top; }
+.reveal-section.is-visible .journey-list li { animation:route-arrive 420ms ease-out both; }
+.reveal-section.is-visible .journey-list li:nth-child(2) { animation-delay:70ms; }
+.reveal-section.is-visible .journey-list li:nth-child(3) { animation-delay:140ms; }
+.reveal-section.is-visible .journey-list li:nth-child(4) { animation-delay:210ms; }
+.award-row { animation:route-arrive 220ms ease-out both; }
+.certificate-dialog[open] { animation:menu-arrive 180ms ease-out; }
+.preparation-topics a .icon,.cabinet-tools a .icon { transition:transform 140ms ease-out; }
+@media(hover:hover) {
+  .preparation-topics a:hover .icon,.cabinet-tools a:hover .icon { transform:translateX(3px); }
+}
+@keyframes compass-trace { from { stroke-dashoffset:150; } to { stroke-dashoffset:0; } }
+@keyframes mountain-arrive { from { opacity:.3; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+@keyframes snow-arrive { 0% { opacity:0; transform:translate3d(0,-16px,0); } 15% { opacity:.7; } 100% { opacity:0; transform:translate3d(-28px,220px,0); } }
+@keyframes menu-arrive { from { opacity:.4; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+@keyframes route-arrive { from { opacity:.5; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) {
+  .brand-mark[data-motion-intro] path,.polar-snow span,.nav-group[open] .nav-panel,.reveal-section.is-visible .journey-list li,.award-row,.certificate-dialog[open] { animation:none; }
+  .polar-snow { display:none; }
+  .preparation-topics a .icon,.cabinet-tools a .icon { transition:none; transform:none!important; }
+}

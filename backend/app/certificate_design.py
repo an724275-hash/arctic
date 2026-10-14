@@ -7,26 +7,44 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 
-def draw_bear(pdf, x, y):
-    """A small flat mascot, drawn as vector shapes for sharp printing."""
+def draw_logo(pdf, x, y):
+    """The same mountain-and-compass mark used in the website header."""
     pdf.saveState()
-    pdf.translate(x, y)
-    pdf.setStrokeColor(HexColor("#286583"))
-    pdf.setLineWidth(1.5)
-    pdf.setFillColor(HexColor("#FFFFFF"))
-    pdf.circle(-22, 18, 9, fill=1, stroke=1)
-    pdf.circle(22, 18, 9, fill=1, stroke=1)
-    pdf.ellipse(-30, -28, 30, 30, fill=1, stroke=1)
-    pdf.setFillColor(HexColor("#2C7DA8"))
-    pdf.roundRect(-30, 17, 60, 19, 7, fill=1, stroke=0)
-    pdf.setFillColor(HexColor("#C9EAF8"))
-    pdf.roundRect(-31, 13, 62, 8, 4, fill=1, stroke=0)
-    pdf.setFillColor(HexColor("#183847"))
-    pdf.circle(-12, 1, 2.5, fill=1, stroke=0)
-    pdf.circle(12, 1, 2.5, fill=1, stroke=0)
-    pdf.ellipse(-5, -12, 5, -5, fill=1, stroke=0)
-    pdf.line(0, -12, 0, -17)
-    pdf.arc(-10, -21, 10, -9, 200, 140)
+    pdf.translate(x - 34, y + 34)
+    pdf.scale(68 / 48, -68 / 48)
+    pdf.setStrokeColor(HexColor("#176B9A"))
+    pdf.setFillColor(HexColor("#176B9A"))
+    pdf.setLineWidth(1.7)
+    outline = pdf.beginPath()
+    outline.moveTo(24, 3)
+    for point in [(40, 13), (40, 34), (24, 45), (8, 34), (8, 13)]:
+        outline.lineTo(*point)
+    outline.close()
+    pdf.drawPath(outline, stroke=1, fill=0)
+    mountain = pdf.beginPath()
+    mountain.moveTo(13, 31)
+    mountain.lineTo(24, 13)
+    mountain.lineTo(35, 31)
+    mountain.close()
+    pdf.drawPath(mountain, fill=1, stroke=0)
+    pdf.setStrokeColor(HexColor("#FFFFFF"))
+    pdf.setLineWidth(1.6)
+    notch = pdf.beginPath()
+    notch.moveTo(19, 22)
+    notch.lineTo(24, 25)
+    notch.lineTo(29, 22)
+    pdf.drawPath(notch)
+    pdf.setStrokeColor(HexColor("#176B9A"))
+    pdf.setLineWidth(1.4)
+    for points in [
+        (24, 3, 24, 10),
+        (24, 38, 24, 45),
+        (8, 13, 14, 17),
+        (34, 31, 40, 34),
+        (8, 34, 14, 31),
+        (34, 17, 40, 13),
+    ]:
+        pdf.line(*points)
     pdf.restoreState()
 
 
@@ -128,7 +146,7 @@ def render_document(certificate, user, font, verify_url, fit):
     qr.make_image(fill_color="#183847", back_color="white").save(png, format="PNG")
     png.seek(0)
     pdf.drawImage(ImageReader(png), width - 170, 57, width=100, height=100)
-    draw_bear(pdf, 100, 465)
+    draw_logo(pdf, 100, 465)
     pdf.showPage()
     pdf.save()
     return output.getvalue()
