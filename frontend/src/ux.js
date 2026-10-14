@@ -2,11 +2,23 @@ import './ux.css';
 import './motion.css';
 import {accountForm} from './account-form.js';
 let introPlayed=false;
+let pendingTabFocus;
 
 export function polishPage(state) {
   const main=document.querySelector('#content');
   main?.setAttribute('aria-busy',String(state.loading));
   main?.querySelector('h1')?.setAttribute('tabindex','-1');
+  document.querySelectorAll('img:not([decoding])').forEach(img=>img.decoding='async');
+  document.querySelectorAll('input[type=email]').forEach(input=>{
+    input.setAttribute('autocapitalize','none');input.setAttribute('autocorrect','off');input.spellcheck=false;
+  });
+  document.querySelectorAll('[role=tablist]').forEach(list=>{
+    list.querySelectorAll('[role=tab]').forEach(tab=>tab.tabIndex=tab.getAttribute('aria-selected')==='true'?0:-1);
+  });
+  if(pendingTabFocus){
+    const tab=document.querySelector(`[role=tab][data-tab="${CSS.escape(pendingTabFocus)}"]`);
+    if(tab){tab.focus();pendingTabFocus=undefined;}
+  }
   if(!introPlayed&&!state.loading)requestAnimationFrame(()=>{if(introPlayed)return;document.querySelector('.brand-mark')?.setAttribute('data-motion-intro','');introPlayed=true;});
   const cover=document.querySelector('.north-cover');
   if(cover&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
@@ -50,6 +62,7 @@ export function polishPage(state) {
     document.querySelector('.cabinet-tools')?.after(note);
   }
   document.querySelectorAll('input[type=password]').forEach(input=>{
+    if(!input.hasAttribute('maxlength'))input.maxLength=256;
     if(input.closest('.password-control'))return;
     const wrap=document.createElement('div');wrap.className='password-control';
     input.before(wrap);wrap.append(input);
@@ -65,9 +78,11 @@ export function polishPage(state) {
     });
     wrap.append(toggle);
   });
-  document.querySelectorAll('.nav-group').forEach(group=>{
-    if(group.querySelector('[aria-current=page]'))group.classList.add('current-group');
+  const navRoute=state.route==='article'?'materials':['quiz','quiz-confirm','result','project','submitted'].includes(state.route)?'dashboard':state.route;
+  document.querySelectorAll('.navigation [data-route]').forEach(link=>{
+    if(link.dataset.route===navRoute)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
   });
+  document.querySelectorAll('.nav-group').forEach(group=>group.classList.toggle('current-group',Boolean(group.querySelector('[aria-current=page]'))));
   document.querySelectorAll('.console-table-wrap').forEach(wrap=>{
     wrap.tabIndex=0;wrap.setAttribute('role','region');
     wrap.setAttribute('aria-label','Таблица. На узком экране можно прокручивать по горизонтали.');
@@ -86,6 +101,11 @@ export function installNavigationPolish() {
     document.querySelectorAll('.nav-group[open]').forEach(group=>{if(group!==event.target)group.open=false;});
   },true);
   document.addEventListener('click',event=>{
+    if(!event.target.closest('.city-field')){
+      const list=document.querySelector('#city-options');
+      if(list)list.hidden=true;
+      document.querySelector('#city')?.setAttribute('aria-expanded','false');
+    }
     if(event.target.closest('.nav-group'))return;
     document.querySelectorAll('.nav-group[open]').forEach(group=>group.open=false);
   });
@@ -98,5 +118,15 @@ export function installNavigationPolish() {
   });
   document.addEventListener('focusin',event=>{
     document.querySelectorAll('.nav-group[open]').forEach(group=>{if(!group.contains(event.target))group.open=false;});
+  });
+  document.addEventListener('keydown',event=>{
+    const tab=event.target.closest('[role=tab]');
+    if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    const tabs=[...tab.closest('[role=tablist]').querySelectorAll('[role=tab]:not(:disabled)')];
+    const index=tabs.indexOf(tab);
+    const next=event.key==='Home'?tabs[0]:event.key==='End'?tabs.at(-1):tabs[(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];
+    event.preventDefault();
+    if(next===tab)return;
+    pendingTabFocus=next.dataset.tab;next.click();
   });
 }

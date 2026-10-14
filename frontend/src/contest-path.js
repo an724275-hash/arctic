@@ -14,7 +14,7 @@ export function contestPath(s, tracked = false) {
       tasks: [
         ['Аккаунт', 'Имя, школа и согласие представителя', Boolean(s.user), s.user ? 'profile' : 'register'],
         ['Тест', 'Ответы сохранены, попытка завершена', Boolean(completed), 'dashboard'],
-        ['Результат', `Не ниже ${s.config?.pass_percent ?? 60}% правильных ответов`, passed, completed ? `result/${completed.id}` : 'dashboard'],
+        ['Результат', passed ? 'Проходной результат достигнут' : `Не ниже ${s.config?.pass_percent ?? 60}% правильных ответов`, passed, completed ? `result/${completed.id}` : 'dashboard'],
       ],
       details: `${s.config?.question_count ?? 15} вопросов. ${Math.ceil((s.config?.duration_seconds ?? 600) / 60)} минут на попытку. Таймер не останавливается при закрытии страницы. После завершения доступны результат, разбор ответов и сертификат. Если тебе нет 18 лет, регистрацию нужно заполнить вместе с законным представителем.`,
       action: ['Открыть тест', 'dashboard'],

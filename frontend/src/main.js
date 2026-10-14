@@ -18,6 +18,7 @@ import {preparationView} from './preparation.js';
 import {polishPage,installNavigationPolish} from './ux.js';
 import {mentorView,createMentor} from './mentor.js';
 import './layout.css';
+import './refinements.css';
 
 const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
 

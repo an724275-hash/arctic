@@ -1,0 +1,35 @@
+.shell .stage-count { font-size:13px; }
+.shell .task-state { font-size:12px; }
+.shell .stage-description { font-size:15px; }
+.shell .stage-requirements p { font-size:15px; }
+.shell .stage-window>header { flex-wrap:wrap; }
+.shell .stage-window h3 { overflow-wrap:anywhere; }
+.shell .stage-tasks .task-node { width:16px; height:16px; }
+.shell .stage-tasks li::before { top:8px; }
+.shell .stage-meter { height:4px; }
+.shell .stage-tasks li>a,.shell .stage-tasks li>div { min-height:112px; }
+.shell .article-hero img { border-radius:8px; }
+.shell .article-hero figcaption { font-size:14px; }
+.shell .article-toc { border-radius:6px; }
+.shell .article-toc ol { list-style:none; padding-left:0; }
+.shell .article-toc button { text-align:left; }
+.shell .reading-next { border-radius:8px; }
+.shell .help-questions details { border-radius:6px; border-left:3px solid transparent; }
+.shell .help-questions details[open] { border-left-color:var(--blue); }
+.shell .article-sources a { text-decoration:underline; }
+.shell .reading-page p { overflow-wrap:anywhere; }
+.shell .news-list h2 { font-size:26px; }
+.shell .news-cover { max-width:780px; }
+.shell .form-caption { font-size:13px; }
+.shell .console-empty { border-radius:6px; }
+.shell .notification-item h2 { font-size:19px; }
+.shell .console-table-wrap { max-height:min(60vh,640px); overflow:auto; }
+.shell .console-table th { position:sticky; top:0; z-index:1; background:var(--ice); }
+.certificate-preview { border-radius:4px; }
+dialog::backdrop { background:rgba(24,56,71,.38); }
+.shell .footer-links>button { min-height:44px; padding:8px 12px; border-radius:6px; }
+@media(max-width:700px) {
+  .shell .stage-tasks li::before { top:8px; left:8px; }
+  .shell .stage-tasks li>a,.shell .stage-tasks li>div { min-height:76px; }
+  .shell .news-list h2 { font-size:23px; }
+}
