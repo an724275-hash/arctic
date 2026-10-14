@@ -49,7 +49,7 @@ export async function request(path, { method = 'GET', body, auth = true, blob = 
   try {
     response = await fetch(`${base}${path}`, {
       method, headers, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
-      signal: AbortSignal.timeout(multipart ? 120000 : 25000),
+      signal: AbortSignal.timeout(multipart ? 120000 : path==='/assistant/ask'?45000:25000),
     });
   } catch (error) {
     throw new ApiError(error.name === 'TimeoutError' ? 'Сервер долго отвечает. Проверь соединение и повтори.' : 'Нет связи с сервером. Проверь подключение и повтори.', 0);
