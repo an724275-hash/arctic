@@ -1,5 +1,5 @@
 import {installContact} from './contact.js';
-import {installAssistant} from './assistant.js';
+import {installAssistant, syncAssistant} from './assistant.js';
 import './styles.css';
 import './app.css';
 import './roles.css';
@@ -81,6 +81,7 @@ function render(scroll = false) {
   profile.afterRender();
   polishPage(state);
   updateSeo();
+  syncAssistant(state.route);
   // при прокрутке
   revealSections();
 }
@@ -587,7 +588,7 @@ async function boot() {
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
 installNavigationPolish();
-installAssistant();
+installAssistant(() => state.route);
 installContact();
 void boot();
 

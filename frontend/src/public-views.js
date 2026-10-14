@@ -1,5 +1,4 @@
 import {contactView} from './contact.js';
-import {assistantPanel} from './assistant.js';
 import { escapeHtml as e, icon } from './ui.js';
 import './public-article.css';
 import {imageSet} from './images.js';
@@ -64,7 +63,7 @@ function helpView() {
     ['Где посмотреть оценку и комментарии?', 'Открой работу в кабинете. Статус меняется по мере проверки; оценки и рецензии появляются после публикации организатором.'],
     ['Как скачать сертификат?', 'Заверши тест и на странице результата нажми «Скачать PDF». Документ также доступен в твоём кабинете.'],
   ];
-  return `${back('/', 'home', 'Главная')}<article class="reading-page"><h1 tabindex="-1">Помощь участнику</h1><p class="reading-lead">Найди ответ через поиск или раскрой вопрос. Ниже можно спросить GigaChat о теме исследования.</p><div class="form-field faq-search"><label for="faq-search">Найти ответ</label><input id="faq-search" type="search" data-faq-search placeholder="Например, сертификат или проект" autocomplete="off"></div><p class="faq-empty" role="status" hidden>Ответ не найден. Попробуй другое слово или посмотри порядок участия.</p><div class="help-questions">${questions.map(([q,a]) => `<details><summary>${e(q)}</summary><p>${e(a)}</p></details>`).join('')}</div>${assistantPanel()}<section class="reading-next">${link('/participation', 'participation', 'Посмотреть этапы участия')}</section></article>`;
+  return `${back('/', 'home', 'Главная')}<article class="reading-page"><h1 tabindex="-1">Помощь участнику</h1><p class="reading-lead">Найди ответ через поиск или раскрой вопрос. Кнопка GigaChat справа внизу поможет разобраться в теме исследования.</p><div class="form-field faq-search"><label for="faq-search">Найти ответ</label><input id="faq-search" type="search" data-faq-search placeholder="Например, сертификат или проект" autocomplete="off"></div><p class="faq-empty" role="status" hidden>Ответ не найден. Попробуй другое слово или посмотри порядок участия.</p><div class="help-questions">${questions.map(([q,a]) => `<details><summary>${e(q)}</summary><p>${e(a)}</p></details>`).join('')}</div><section class="reading-next">${link('/participation', 'participation', 'Посмотреть этапы участия')}</section></article>`;
 }
 
 function notFoundView() {

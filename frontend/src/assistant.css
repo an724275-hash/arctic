@@ -4,3 +4,14 @@
 .assistant-privacy{font-size:14px;line-height:1.5}.assistant-answer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}.assistant-answer:empty{display:none}.assistant-panel button{justify-self:start}
 
 .participation-count{margin:16px 0 0;color:#345f73;font-size:15px}.contact-result{overflow-wrap:anywhere;line-height:1.5}
+
+.assistant-widget{position:fixed;right:24px;bottom:24px;z-index:45;color:#24495b}
+.assistant-tools{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.assistant-tools button,.assistant-close{display:grid;place-items:center;width:48px;height:48px;min-height:48px;padding:12px;border:1px solid #c2d5df;border-radius:12px;cursor:pointer}
+.assistant-launcher{background:#345f73;color:white;box-shadow:0 4px 16px #24495b24}.assistant-top,.assistant-close{background:white;color:#345f73}
+.assistant-tools svg,.assistant-close svg{width:24px;height:24px}.assistant-tools button:hover{filter:brightness(.95)}.assistant-tools button:focus-visible,.assistant-close:focus-visible{outline:3px solid #6ba2be;outline-offset:3px}.assistant-tools button:disabled{opacity:.45;cursor:not-allowed}
+.assistant-widget [hidden]{display:none!important}
+.assistant-window{position:absolute;right:0;bottom:126px;width:380px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 176px);overflow:auto;overscroll-behavior:contain;background:white;border:1px solid #c2d5df;border-radius:12px;box-shadow:0 12px 40px #24495b26;padding:24px}
+.assistant-window .assistant-panel{margin:0;padding:0;border:0}.assistant-window h2{font-size:23px;padding-right:28px;margin:0 0 16px}.assistant-window p{font-size:14px;line-height:1.55}.assistant-window form{gap:12px;margin-top:18px}.assistant-window label{font-size:14px}.assistant-window textarea{font-size:16px;min-height:92px}.assistant-window .assistant-consent{font-size:12px}.assistant-window .assistant-answer{font-size:15px}.assistant-close{position:absolute;right:10px;top:10px;width:36px;height:36px;min-height:36px;padding:8px;border:0;background:transparent}
+@media(max-width:700px){.assistant-widget{right:16px;bottom:calc(88px + env(safe-area-inset-bottom))}.assistant-window{width:360px;padding:20px;max-height:calc(100dvh - 250px)}}
+@media(prefers-reduced-motion:no-preference){.assistant-window:not([hidden]){animation:assistant-open 160ms ease-out}@keyframes assistant-open{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}
