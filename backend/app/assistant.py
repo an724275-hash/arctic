@@ -121,16 +121,11 @@ def assistant_status():
     return {"available": bool(settings.gigachat_credentials.get_secret_value()), "provider": "GigaChat"}
 
 
-@router.post("/ask")
-async def ask(body: Question, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if not settings.gigachat_credentials.get_secret_value():
-        raise HTTPException(503, "Помощник временно недоступен.")
-    if not body.consent:
-        raise HTTPException(422, "Подтверди отправку сообщений в GigaChat.")
+def require_no_active_quiz(db: Session, user_id: str):
     active = db.scalar(
         select(QuizAttempt.id)
         .where(
-            QuizAttempt.user_id == user.id,
+            QuizAttempt.user_id == user_id,
             QuizAttempt.submitted_at.is_(None),
             QuizAttempt.expires_at > utcnow(),
         )
@@ -138,6 +133,15 @@ async def ask(body: Question, user: User = Depends(get_current_user), db: Sessio
     )
     if active:
         raise HTTPException(409, "Во время теста помощник недоступен. Заверши попытку самостоятельно.")
+
+
+@router.post("/ask")
+async def ask(body: Question, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not settings.gigachat_credentials.get_secret_value():
+        raise HTTPException(503, "Помощник временно недоступен.")
+    if not body.consent:
+        raise HTTPException(422, "Подтверди отправку сообщений в GigaChat.")
+    require_no_active_quiz(db, user.id)
     db.execute(text("SELECT pg_advisory_xact_lock(79142026)"))
     now = utcnow()
     daily = db.scalar(
@@ -157,6 +161,7 @@ async def ask(body: Question, user: User = Depends(get_current_user), db: Sessio
     db.commit()
     try:
         answer = await asyncio.wait_for(giga.answer(body.question, body.history), timeout=42)
+        require_no_active_quiz(db, user.id)
         return {"answer": answer, "provider": "GigaChat"}
     except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, OSError) as exc:
         logger.warning(

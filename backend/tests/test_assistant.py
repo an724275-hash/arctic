@@ -170,3 +170,25 @@ def test_provider_receives_fixed_system_and_bounded_history(monkeypatch):
     assert seen[0]["role"] == "system"
     assert seen[0]["content"].startswith("Ты помощник школьника")
     assert [message["role"] for message in seen] == ["system", "user", "assistant", "user"]
+
+
+def test_quiz_started_while_waiting_hides_assistant_reply(client, db, users, auth_headers, monkeypatch):
+    configure(monkeypatch)
+
+    async def late_answer(question, history):
+        db.add(
+            QuizAttempt(
+                user_id=users["participant"].id, expires_at=utcnow() + timedelta(minutes=10), questions=[]
+            )
+        )
+        db.commit()
+        return "Ответ не должен попасть участнику"
+
+    monkeypatch.setattr(assistant.giga, "answer", late_answer)
+    response = client.post(
+        "/api/v1/assistant/ask",
+        headers=auth_headers("participant"),
+        json={"question": "Что такое Арктика?", "consent": True},
+    )
+    assert response.status_code == 409
+    assert "Ответ не должен" not in response.text
