@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import field_validator, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     smtp_from: str = "noreply@example.com"
     smtp_starttls: bool = True
     enable_email_delivery: bool = False
-    gigachat_credentials: str = ""
+    gigachat_credentials: SecretStr = SecretStr("")
     gigachat_scope: str = "GIGACHAT_API_PERS"
     gigachat_model: str = "GigaChat-2-Max"
     gigachat_ca_bundle: str = ""

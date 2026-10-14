@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import httpx
+from pydantic import SecretStr
 
 from app import assistant
 from app.config import settings
@@ -8,7 +9,7 @@ from app.models import AssistantRequest, QuizAttempt, utcnow
 
 
 def configure(monkeypatch):
-    monkeypatch.setattr(settings, "gigachat_credentials", "private-test-key")
+    monkeypatch.setattr(settings, "gigachat_credentials", SecretStr("private-test-key"))
 
     async def answer(question):
         return "Ответ про Арктику"

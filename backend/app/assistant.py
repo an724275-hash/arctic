@@ -76,7 +76,10 @@ class GigaClient:
 
             response = await client.post(
                 "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
-                headers={"Authorization": f"Basic {settings.gigachat_credentials}", "RqUID": str(uuid4())},
+                headers={
+                    "Authorization": f"Basic {settings.gigachat_credentials.get_secret_value()}",
+                    "RqUID": str(uuid4()),
+                },
                 data={"scope": settings.gigachat_scope},
             )
 
@@ -138,13 +141,13 @@ giga = GigaClient()
 @router.get("/status")
 def assistant_status():
 
-    return {"available": bool(settings.gigachat_credentials), "provider": "GigaChat"}
+    return {"available": bool(settings.gigachat_credentials.get_secret_value()), "provider": "GigaChat"}
 
 
 @router.post("/ask")
 async def ask(body: Question, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if not settings.gigachat_credentials:
+    if not settings.gigachat_credentials.get_secret_value():
         raise HTTPException(503, "РџРѕРјРѕС‰РЅРёРє РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ.")
 
     if not body.consent:
