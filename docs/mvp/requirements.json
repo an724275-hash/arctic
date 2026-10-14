@@ -416,8 +416,8 @@
   {
     "id": "TZ-070",
     "requirement": "Управление баннерами и CTA.",
-    "status": "API CMS существует; полный интерфейс редактора и комментариев требует завершения",
-    "evidence": "backend/app/content.py/admin_content; frontend/src/console.js"
+    "status": "реализовано и проверено в браузере; требуется содержимое организатора",
+    "evidence": "frontend/src/home-banners.js; frontend/src/cms.js; output/release/home-banner-e2e.json (создание, публикация, переход, экранирование, четыре ширины)"
   },
   {
     "id": "TZ-071",
