@@ -1,15 +1,20 @@
+import hashlib
+from datetime import timedelta
+from uuid import UUID
+
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.common import audit, stage_state
 from app.config import settings
 from app.db import get_db
 from app.dependencies import require_roles
-from app.models import ContactMessage, Content, Nomination, Project, Stage, User
+from app.models import ContactMessage, Content, Nomination, Project, Stage, User, VisitorPresence, utcnow
 
 router = APIRouter(tags=["public content"])
 
@@ -149,7 +154,9 @@ def admin_content(
         stmt = stmt.where(or_(Content.title.ilike(f"%{q}%"), Content.body.ilike(f"%{q}%")))
     return [
         content_out(row)
-        for row in db.scalars(stmt.order_by(Content.updated_at.desc(), Content.id).limit(limit).offset(offset))
+        for row in db.scalars(
+            stmt.order_by(Content.updated_at.desc(), Content.id).limit(limit).offset(offset)
+        )
     ]
 
 
@@ -197,3 +204,27 @@ def delete_content(
     audit(db, admin.id, "content.delete", row.id)
     db.delete(row)
     db.commit()
+
+
+class PresenceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    session_id: UUID
+
+
+@router.post("/public/presence")
+def update_presence(body: PresenceIn, db: Session = Depends(get_db)):
+    now = utcnow()
+    session_hash = hashlib.sha256(str(body.session_id).encode()).hexdigest()
+    db.execute(
+        insert(VisitorPresence)
+        .values(session_hash=session_hash, last_seen=now)
+        .on_conflict_do_update(index_elements=[VisitorPresence.session_hash], set_={"last_seen": now})
+    )
+    db.execute(delete(VisitorPresence).where(VisitorPresence.last_seen < now - timedelta(minutes=5)))
+    total = db.scalar(
+        select(func.count())
+        .select_from(VisitorPresence)
+        .where(VisitorPresence.last_seen > now - timedelta(minutes=2))
+    )
+    db.commit()
+    return {"active_sessions": total, "window_seconds": 120}

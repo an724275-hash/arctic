@@ -56,8 +56,8 @@
   {
     "id": "TZ-010",
     "requirement": "Счётчик участников в реальном времени (социальное доказательство).",
-    "status": "реализовано; отдельная сверка публичного счётчика с БД ещё нужна",
-    "evidence": "backend/app/content.py/public_stats; frontend/src/main.js и views.js: обновление раз в 30с"
+    "status": "уточнение пользователя: на главной показывать онлайн, а не регистрации; реализованы активные сессии, общая статистика сохранена в кабинете организатора",
+    "evidence": "backend/app/content.py/update_presence; frontend/src/presence.js; backend/tests/test_presence.py; output/release/home-presence-live.json"
   },
   {
     "requirement": "2. О конкурсе",

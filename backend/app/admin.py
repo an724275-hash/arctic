@@ -45,6 +45,7 @@ from app.models import (
     Stage,
     TeacherLink,
     User,
+    VisitorPresence,
     utcnow,
 )
 from app.security import hash_password
@@ -529,6 +530,9 @@ def stats(db: Db, actor: Analyst):
         .order_by(Nomination.title)
     ).all()
     return {
+        "active_sessions": count(
+            VisitorPresence, VisitorPresence.last_seen > utcnow() - timedelta(minutes=2)
+        ),
         "users_total": count(User),
         "active_users": count(User, User.is_active.is_(True)),
         "participants_total": count(User, User.role == "participant", User.is_active.is_(True)),

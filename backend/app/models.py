@@ -283,3 +283,9 @@ class AssistantRequest(IdMixin, Base):
     __tablename__ = "assistant_requests"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class VisitorPresence(Base):
+    __tablename__ = "visitor_presence"
+    session_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

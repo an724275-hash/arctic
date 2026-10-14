@@ -76,7 +76,7 @@ body { background: #f6f9fb url('/assets/north-background.svg') center top / 1600
 .work-table th { background: var(--north); color: var(--ink); }
 .status.success { background: var(--moss); color: var(--sage); }
 @media(max-width:900px) { .cover-bear { right: 12px; bottom: 40px; } .sound-hero { right: 20px; } .account-hero { align-items: flex-start; flex-direction: column; } }
-@media(max-width:700px) { .cover-bear { right: 8px; bottom: 34px; } .sound-hero { right: 16px; bottom: 16px; min-height: 44px; padding: 10px 14px; font-size: 12px; } .account-hero { padding: 24px 20px; border-radius: 24px; gap: 20px; } .account-avatar { width: 48px; height: 48px; border-radius: 16px; font-size: 18px; } .account-identity { gap: 12px; } .activity-island { min-height: 42px; padding: 10px 16px; } }
+@media(max-width:700px) { .cover-bear { right: 8px; bottom: 34px; } .sound-hero { left: 16px; right: auto; bottom: 16px; min-height: 44px; padding: 10px 14px; font-size: 12px; } .account-hero { padding: 24px 20px; border-radius: 24px; gap: 20px; } .account-avatar { width: 48px; height: 48px; border-radius: 16px; font-size: 18px; } .account-identity { gap: 12px; } .activity-island { min-height: 42px; padding: 10px 16px; } }
 
 /* опора мишки */
 .cover-bear::before { content: ''; position: absolute; left: -8%; right: -20%; top: 86%; height: 65%; background: url('/assets/snow-cliff.svg') center top / 100% 100% no-repeat; }

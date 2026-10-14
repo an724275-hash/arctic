@@ -1,3 +1,4 @@
+import {installPresence, syncPresence} from './presence.js';
 import {installContact} from './contact.js';
 import {installAssistant, syncAssistant} from './assistant.js';
 import './styles.css';
@@ -82,6 +83,7 @@ function render(scroll = false) {
   polishPage(state);
   updateSeo();
   syncAssistant(state.route);
+  syncPresence();
   // при прокрутке
   revealSections();
 }
@@ -130,9 +132,9 @@ function currentFormMessage(message, success = false) {
 async function loadPublic() {
   const results = await Promise.allSettled([
     request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=100', { auth: false }), request('/stages',{auth:false}),
-    request('/capabilities',{auth:false}), request('/public/stats',{auth:false}),
+    request('/capabilities',{auth:false}),
   ]);
-  ['config', 'nominations', 'content','stages','capabilities','publicStats'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
+  ['config', 'nominations', 'content','stages','capabilities'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
   state.publicError = results.some(r => r.status === 'rejected') ? 'Часть материалов пока недоступна. Попробуй обновить страницу позже.' : '';
 }
 async function loadDashboard() {
@@ -593,14 +595,7 @@ async function boot() {
 installNavigationPolish();
 installAssistant(() => state.route);
 installContact();
+installPresence();
 void boot();
 
 
-setInterval(async () => {
-  if(state.route !== 'home' || document.hidden || !navigator.onLine) return;
-  try {
-    state.publicStats = await request('/public/stats', {auth:false});
-    const count=document.querySelector('.participation-count');
-    if(count) count.textContent=`Участвуют ${Number(state.publicStats.participants).toLocaleString('ru-RU')} школьников · ${Number(state.publicStats.regions).toLocaleString('ru-RU')} регионов`;
-  } catch { /* без обновления */ }
-},30000);
