@@ -1,5 +1,5 @@
 const paths = {
-  media:'/media', contacts: '/contacts', home: '/', about: '/about', participation: '/participation', materials: '/materials',
+  partners:'/partners',media:'/media', contacts: '/contacts', home: '/', about: '/about', participation: '/participation', materials: '/materials',
   rules: '/rules', help: '/help',news:'/news',preparation:'/preparation', 'verify-email': '/verify-email', 'reset-password': '/reset-password',
   'teacher-invite':'/teacher-invite',
 };
@@ -20,7 +20,8 @@ export function readRoute(location) {
 export function routeUrl(route, query = '') {
   const [name, id] = route.split('/');
   if (name === 'article') return `/materials/${id || ''}`;
-  const search = ['verify-email', 'reset-password'].includes(name) ? query : '';
+  const kind=new URLSearchParams(query).get('kind');
+  const search = name==='contacts'&&['sponsor','volunteer'].includes(kind)?`?kind=${kind}`:['verify-email', 'reset-password'].includes(name) ? query : '';
   return paths[name] ? `${paths[name]}${search}` : `/#${route}`;
 }
 
@@ -30,7 +31,7 @@ export const pageTitles = {
   home: 'Открой свою Арктику', about: 'О конкурсе', participation: 'Как участвовать',
   materials: 'Открывай Север', article: 'Материал', rules: 'Положение о конкурсе',
   help: 'Помощь', 'not-found': 'Страница не найдена', login: 'Вход', register: 'Регистрация',
-  media:'Медиатека', contacts: 'Связь с организатором', dashboard: 'Мой кабинет', quiz: 'Знакомство с Арктикой', result: 'Мой результат',
+  partners:'Партнёрам',media:'Медиатека', contacts: 'Связь с организатором', dashboard: 'Мой кабинет', quiz: 'Знакомство с Арктикой', result: 'Мой результат',
   project: 'Мой проект', submitted: 'Статус проекта', workspace: 'Рабочий кабинет',
   'review-project': 'Работа участника', rankings: 'Результаты конкурса',
 };

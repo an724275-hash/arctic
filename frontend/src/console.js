@@ -1,3 +1,4 @@
+import {userManagementForm} from './user-management.js';
 import {questionBankView} from './question-bank.js';
 import {cmsView} from './cms.js';
 import {request,download} from './api.js';
@@ -46,7 +47,7 @@ function settings(s) {
 }
 function people(s) {
   const c=s.console;
-  return `${heading('Участники и команда конкурса','Поиск работает по ФИО и почте. Данные доступны только организатору; роль и состояние аккаунта отображаются из базы.')}<section class="panel"><form data-console-form="people" class="console-filter"><div class="form-field"><label for="people-search">Имя или электронная почта</label><input id="people-search" name="q" type="search" maxlength="200" value="${e(c.query)}" placeholder="Найти участника"></div><div class="form-field"><label for="people-role">Роль</label><select id="people-role" name="role"><option value="">Все роли</option>${Object.entries(labels).map(([id,label])=>`<option value="${id}" ${c.role===id?'selected':''}>${label}</option>`).join('')}</select></div><button class="button secondary" type="submit">Найти</button></form><div class="console-table-wrap"><table class="console-table"><thead><tr><th>Участник</th><th>Роль</th><th>Учебное заведение</th><th>Регион и город</th><th>Аккаунт</th></tr></thead><tbody>${c.people.items.map(user=>`<tr><td><strong>${e(user.full_name)}</strong><small>${e(user.email)}</small></td><td>${labels[user.role]||e(user.role)}</td><td>${e(user.school||'Не указано')}${user.grade?`<small>${user.grade} класс</small>`:''}</td><td>${e(user.region||'Не указан')}<small>${e(user.city||'')}</small></td><td>${user.is_active?'Активен':'Отключён'}<small>${user.email_verified?'Почта подтверждена':'Почта не подтверждена'}</small></td></tr>`).join('')}</tbody></table></div>${!c.people.items.length?blank('По этому запросу ничего не найдено. Измени имя или роль.'):''}<div class="console-pagination"><span>Найдено ${num(c.people.total)} · ${c.offset+1}–${c.offset+c.people.items.length}</span><button class="link-button" data-console="people-back" ${c.offset?'':'disabled'}>Назад</button><button class="link-button" data-console="people-next" ${c.offset+c.people.items.length<c.people.total?'':'disabled'}>Далее</button></div></section>`;
+  return `${heading('Участники и команда конкурса','Поиск работает по ФИО и почте. Данные доступны только организатору; роль и состояние аккаунта отображаются из базы.')}<section class="panel"><form data-console-form="people" class="console-filter"><div class="form-field"><label for="people-search">Имя или электронная почта</label><input id="people-search" name="q" type="search" maxlength="200" value="${e(c.query)}" placeholder="Найти участника"></div><div class="form-field"><label for="people-role">Роль</label><select id="people-role" name="role"><option value="">Все роли</option>${Object.entries(labels).map(([id,label])=>`<option value="${id}" ${c.role===id?'selected':''}>${label}</option>`).join('')}</select></div><button class="button secondary" type="submit">Найти</button></form><div class="console-table-wrap"><table class="console-table"><thead><tr><th>Участник</th><th>Роль</th><th>Учебное заведение</th><th>Регион и город</th><th>Аккаунт</th><th>Доступ и согласия</th></tr></thead><tbody>${c.people.items.map(user=>`<tr><td><strong>${e(user.full_name)}</strong><small>${e(user.email)}</small></td><td>${labels[user.role]||e(user.role)}</td><td>${e(user.school||'Не указано')}${user.grade?`<small>${user.grade} класс</small>`:''}</td><td>${e(user.region||'Не указан')}<small>${e(user.city||'')}</small></td><td>${user.is_active?'Активен':'Отключён'}<small>${user.email_verified?'Почта подтверждена':'Почта не подтверждена'}</small></td><td><button class="button secondary small" type="button" data-console="user-access" data-id="${e(user.id)}">Открыть</button></td></tr>`).join('')}</tbody></table></div>${!c.people.items.length?blank('По этому запросу ничего не найдено. Измени имя или роль.'):''}<div class="console-pagination"><span>Найдено ${num(c.people.total)} · ${c.offset+1}–${c.offset+c.people.items.length}</span><button class="link-button" data-console="people-back" ${c.offset?'':'disabled'}>Назад</button><button class="link-button" data-console="people-next" ${c.offset+c.people.items.length<c.people.total?'':'disabled'}>Далее</button></div></section>`;
 }
 function communications(s) {
   const c=s.console;
@@ -60,7 +61,8 @@ export const consoleViews={'question-bank':questionBankView,'content-editor':cms
 
 export function createConsole(s,ui) {
   s.console={bank:{items:[],selected:null,query:'',difficulty:'',offset:0},cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
-  let busy=false,dirty=false;
+  let busy=false,dirty=false,accessEditing=false;
+  document.querySelector('#dialog').addEventListener('close',()=>{if(accessEditing){accessEditing=false;dirty=false;}});
   const c=s.console;
   const rolesAllowed=route=>route==='notifications' ? Boolean(s.user) : route==='overview' ? ['admin','commission'].includes(s.user?.role) : !consoleRoutes.has(route)||s.user?.role==='admin';
   async function load(route) {
@@ -88,7 +90,18 @@ export function createConsole(s,ui) {
       if(action==='new') c.selected='';
       ui.render();
     }
-    if(action==='bank-new'||action==='bank-select'){
+    if(action==='user-access'){
+      const user=c.people.items.find(row=>row.id===target.dataset.id);
+      accessEditing=true;ui.modal('Доступ и согласия',userManagementForm(user,s.user.id));
+    }
+    if(action==='user-anonymize'){
+      if(target.dataset.id===s.user.id)throw new Error('Свой аккаунт нельзя обезличить через этот экран.');
+      if(!window.confirm('Необратимо обезличить и отключить профиль? Конкурсные материалы сохранятся.'))return true;
+      busy=true;target.disabled=true;
+      try{await request(`/admin/users/${target.dataset.id}`,{method:'DELETE'});document.querySelector('#dialog').close();dirty=false;await refresh();ui.toast('Профиль обезличен и отключён.');}
+      finally{busy=false;target.disabled=false;}
+    }
+    if(action==='bank-new' ||action==='bank-select'){
       if(!canLeave())return true;
       c.bank.selected=action==='bank-select'?c.bank.items.find(row=>row.id===target.dataset.id):null;ui.render();
     }
@@ -140,10 +153,16 @@ export function createConsole(s,ui) {
     if(type==='announcement'&&!window.confirm(`Отправить уведомление всем активным аккаунтам роли «${labels[data.role]}»?`))return;
     busy=true;
     const submit=form.querySelector('[type=submit]');
-    const controls=[...document.querySelectorAll('.console-content input,.console-content textarea,.console-content select,.console-content button')].map(node=>[node,node.disabled]);
+    const controls=[...document.querySelectorAll('.console-content input,.console-content textarea,.console-content select,.console-content button,#dialog input,#dialog select,#dialog button')].map(node=>[node,node.disabled]);
     controls.forEach(([node])=>{node.disabled=true;});
     const message=form.querySelector('.form-message');message.textContent='Сохраняем…';
     try {
+      if(type==='user-access'){
+        const user=c.people.items.find(row=>row.id===data.user_id);
+        if(!user||user.id===s.user.id)throw new Error('Этот аккаунт нельзя изменять через выбранный экран.');
+        await request(`/admin/users/${user.id}`,{method:'PATCH',body:{role:data.role,is_active:data.active==='on'}});
+        dirty=false;document.querySelector('#dialog').close();await refresh();ui.toast('Доступ пользователя обновлён.');
+      }
       if(type==='bank'){
         const options=[],correct=[];
         for(let index=0;index<8;index++){

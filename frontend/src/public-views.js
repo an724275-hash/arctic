@@ -1,3 +1,4 @@
+import {partnersView} from './partners-public.js';
 import {mediaView} from './media.js';
 import {contactView} from './contact.js';
 import { escapeHtml as e, icon } from './ui.js';
@@ -71,4 +72,4 @@ function notFoundView() {
   return `<section class="reading-page"><h1 tabindex="-1">Страница не найдена</h1><p class="reading-lead">Возможно, адрес изменился. Перейди на главную или открой материалы об Арктике.</p>${link('/', 'home', 'На главную')}</section>`;
 }
 
-export const publicViews = { media: mediaView, contacts: contactView, article: articleView, rules: rulesView, help: helpView, 'not-found': notFoundView };
+export const publicViews = { partners: partnersView, media: mediaView, contacts: contactView, article: articleView, rules: rulesView, help: helpView, 'not-found': notFoundView };
