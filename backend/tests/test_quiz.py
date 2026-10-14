@@ -457,3 +457,24 @@ def test_parallel_start_and_submit_are_serialized_in_postgresql(test_engine):
     finally:
         with test_engine.begin() as connection:
             connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+
+
+def test_question_bank_search_filters_and_rejects_other_roles(client, auth_headers, question_bank):
+    payload = {
+        "text": "Вопрос для поиска по теме",
+        "options": [{"id": "yes", "text": "Да"}, {"id": "no", "text": "Нет"}],
+        "correct_option_ids": ["yes"],
+        "topic": "QA_TOPIC_UNIQUE",
+        "difficulty": "hard",
+    }
+    created = client.post(f"{API}/admin/questions", headers=auth_headers("admin"), json=payload)
+    assert created.status_code == 201
+    response = client.get(
+        f"{API}/admin/questions?q=QA_TOPIC_UNIQUE&difficulty=hard", headers=auth_headers("admin")
+    )
+    assert [row["id"] for row in response.json()] == [created.json()["id"]]
+    assert (
+        client.get(f"{API}/admin/questions?difficulty=unknown", headers=auth_headers("admin")).status_code
+        == 422
+    )
+    assert client.get(f"{API}/admin/questions", headers=auth_headers("participant")).status_code == 403

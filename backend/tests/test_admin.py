@@ -297,3 +297,14 @@ def test_rankings_include_only_completed_reviews_and_rank_ties(client, db, users
     assert [item["rank"] for item in items] == [1, 1, 2]
     assert [item["project"]["id"] for item in items[:2]] == sorted([high.id, tied.id])
     assert client.get(f"{API}/admin/rankings", headers=auth_headers("participant")).status_code == 403
+
+
+def test_stats_count_only_filled_active_participant_schools_and_regions(client, db, users, auth_headers):
+    users["participant"].region = "Республика Саха (Якутия)"
+    users["participant"].school = "Школа для проверки"
+    users["participant2"].region = "   "
+    users["participant2"].school = ""
+    db.commit()
+    result = client.get(f"{API}/admin/stats", headers=auth_headers("admin")).json()
+    assert result["regions_total"] == 1
+    assert result["schools_total"] == 1

@@ -10,7 +10,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.certificates import certificate_response, issue_quiz_certificate
@@ -359,14 +359,21 @@ def _question_response(question: Question) -> dict:
 
 @router.get("/admin/questions")
 def list_questions(
+    q: str = Query(default="", max_length=200),
+    difficulty: Literal["easy", "medium", "hard"] | None = None,
     limit: int = Query(default=100, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     _user: User = Depends(require_roles("admin")),
 ) -> list[dict]:
+    statement = select(Question)
+    if q:
+        statement = statement.where(or_(Question.text.ilike(f"%{q}%"), Question.topic.ilike(f"%{q}%")))
+    if difficulty:
+        statement = statement.where(Question.difficulty == difficulty)
     return [
         _question_response(question)
-        for question in db.scalars(select(Question).order_by(Question.id).limit(limit).offset(offset)).all()
+        for question in db.scalars(statement.order_by(Question.id).limit(limit).offset(offset)).all()
     ]
 
 

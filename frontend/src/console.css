@@ -13,7 +13,7 @@
 .console-content .workspace-tabs>a { display:none; }
 .console-page-actions { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin:0 0 24px; color:var(--muted); font-size:13px; }
 .console-page-actions>a { display:flex; align-items:center; gap:8px; }
-.console-metrics { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:24px 0; margin:0 0 32px; gap:24px; }
+.console-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:24px 0; margin:0 0 32px; gap:24px; }
 .console-metrics dt { font-size:14px; color:var(--muted); }
 .console-metrics dd { font-size:36px; letter-spacing:-1px; margin:8px 0 0; font-weight:650; }
 .console-charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }

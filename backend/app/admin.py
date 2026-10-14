@@ -503,6 +503,13 @@ def stats(db: Db, actor: Analyst):
     def count(model, *filters):
         return db.scalar(select(func.count()).select_from(model).where(*filters))
 
+    def distinct_participant_values(column):
+        return db.scalar(
+            select(func.count(func.distinct(column))).where(
+                User.role == "participant", User.is_active.is_(True), func.length(func.trim(column)) > 0
+            )
+        )
+
     def grouped(column, model, *filters):
         return [
             {"label": str(label) if label is not None else "Не указано", "count": amount}
@@ -525,6 +532,8 @@ def stats(db: Db, actor: Analyst):
         "users_total": count(User),
         "active_users": count(User, User.is_active.is_(True)),
         "participants_total": count(User, User.role == "participant", User.is_active.is_(True)),
+        "regions_total": distinct_participant_values(User.region),
+        "schools_total": distinct_participant_values(User.school),
         "teachers_total": count(User, User.role == "teacher", User.is_active.is_(True)),
         "projects_total": count(Project),
         "reviews_total": count(Review),

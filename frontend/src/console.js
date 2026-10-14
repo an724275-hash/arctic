@@ -1,3 +1,4 @@
+import {questionBankView} from './question-bank.js';
 import {cmsView} from './cms.js';
 import {request,download} from './api.js';
 import {escapeHtml as e,icon,heading} from './ui.js';
@@ -5,10 +6,10 @@ import './console.css';
 import {expertSettings} from './expert-settings.js';
 import {testingSettings} from './testing-settings.js';
 
-export const consoleRoutes = new Set(['content-editor','overview','contest-settings','people','expert-directions','communications','notifications']);
+export const consoleRoutes = new Set(['question-bank','content-editor','overview','contest-settings','people','expert-directions','communications','notifications']);
 const labels = {participant:'Участник',teacher:'Наставник',expert:'Эксперт',admin:'Организатор',commission:'Комиссия',partner:'Партнёр'};
 const statuses = {draft:'Черновик',submitted:'Проверка',admitted:'Допущен',rejected:'Исправления',reviewing:'Экспертиза',evaluated:'Оценён'};
-const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['content-editor','book','Контент'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
+const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['content-editor','book','Контент'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['question-bank','book','Банк вопросов'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
 const link = (route,label,symbol='arrow')=>`<a href="/#${route}" data-route="${route}">${icon(symbol)}<span>${e(label)}</span></a>`;
 const date = value=>value ? new Date(value).toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'}) : 'Срок не указан';
 const num = value=>Number(value || 0).toLocaleString('ru-RU');
@@ -29,7 +30,7 @@ function signupChart(rows) {
 }
 function overview(s) {
   const d=s.console.stats;
-  return `${heading('Обзор конкурса','Участники, работы и результаты конкурса.')}<div class="console-page-actions"><span>Обновлено ${date(s.console.updated)}</span><button class="button secondary small" data-console="refresh">Обновить данные</button></div><dl class="console-metrics">${[['participants_total','Участников'],['projects_total','Проектов'],['reviews_total','Рецензий'],['certificates_total','Сертификатов']].map(([key,label])=>`<div><dt>${label}</dt><dd>${num(d[key])}</dd></div>`).join('')}</dl><div class="console-charts"><section class="panel"><h2>География участников</h2><p class="chart-caption">Регионы, указанные в профилях активных участников.</p>${bars(d.regions,d.participants_total)}</section><section class="panel"><h2>Работы по номинациям</h2><p class="chart-caption">Включает сохранённые черновики и отправленные работы.</p>${bars(d.nominations,d.projects_total)}</section><section class="panel"><h2>Регистрации за 30 дней</h2><p class="chart-caption">Все роли. Наведи на точку или открой таблицу.</p>${signupChart(d.signups_daily)}</section><section class="panel"><h2>Этапы проверки работ</h2>${bars(d.project_statuses,d.projects_total,statuses)}<div class="console-export"><button class="button secondary small" data-console="export-projects">Проекты CSV</button><button class="button secondary small" data-console="export-users">Участники CSV</button><button class="button secondary small" data-console="export-reviews">Оценки экспертов CSV</button><button class="button secondary small" data-console="export-analytics">Вся аналитика JSON</button></div><p class="form-caption">Экспорт содержит персональные данные. Передавай его только уполномоченным организаторам.</p></section></div>`;
+  return `${heading('Обзор конкурса','Участники, работы и результаты конкурса.')}<div class="console-page-actions"><span>Обновлено ${date(s.console.updated)}</span><button class="button secondary small" data-console="refresh">Обновить данные</button></div><dl class="console-metrics">${[['participants_total','Участников'],['projects_total','Проектов'],['regions_total','Регионов'],['schools_total','Учебных заведений'],['reviews_total','Рецензий'],['certificates_total','Сертификатов']].map(([key,label])=>`<div><dt>${label}</dt><dd>${num(d[key])}</dd></div>`).join('')}</dl><div class="console-charts"><section class="panel"><h2>География участников</h2><p class="chart-caption">Регионы, указанные в профилях активных участников.</p>${bars(d.regions,d.participants_total)}</section><section class="panel"><h2>Работы по номинациям</h2><p class="chart-caption">Включает сохранённые черновики и отправленные работы.</p>${bars(d.nominations,d.projects_total)}</section><section class="panel"><h2>Регистрации за 30 дней</h2><p class="chart-caption">Все роли. Наведи на точку или открой таблицу.</p>${signupChart(d.signups_daily)}</section><section class="panel"><h2>Этапы проверки работ</h2>${bars(d.project_statuses,d.projects_total,statuses)}<div class="console-export"><button class="button secondary small" data-console="export-projects">Проекты CSV</button><button class="button secondary small" data-console="export-users">Участники CSV</button><button class="button secondary small" data-console="export-reviews">Оценки экспертов CSV</button><button class="button secondary small" data-console="export-analytics">Вся аналитика JSON</button></div><p class="form-caption">Экспорт содержит персональные данные. Передавай его только уполномоченным организаторам.</p></section></div>`;
 }
 function field(name,label,value='',type='text',extra='') {
   return `<div class="form-field"><label for="setting-${name}">${label}</label><input id="setting-${name}" name="${name}" type="${type}" value="${e(value)}" ${extra}></div>`;
@@ -55,10 +56,10 @@ function notifications(s) {
   const rows=s.console.notifications;
   return `${heading('Уведомления','Сообщения организатора и события участия. Здесь нет рекламной рассылки или сообщений из внешних сервисов.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
 }
-export const consoleViews={'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
+export const consoleViews={'question-bank':questionBankView,'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
 
 export function createConsole(s,ui) {
-  s.console={cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
+  s.console={bank:{items:[],selected:null,query:'',difficulty:'',offset:0},cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
   let busy=false,dirty=false;
   const c=s.console;
   const rolesAllowed=route=>route==='notifications' ? Boolean(s.user) : route==='overview' ? ['admin','commission'].includes(s.user?.role) : !consoleRoutes.has(route)||s.user?.role==='admin';
@@ -68,6 +69,7 @@ export function createConsole(s,ui) {
     if(route==='contest-settings') { [c.stages,c.nominations,c.criteria,c.quizConfig]=await Promise.all(['/admin/stages','/admin/nominations','/admin/criteria','/admin/quiz-config'].map(url=>request(url)));if(c.tab!=='testing'&&!c[c.tab].some(row=>row.id===c.selected)) c.selected=c[c.tab][0]?.id||''; }
     if(route==='people') c.people=await request(`/admin/users?limit=30&offset=${c.offset}&q=${encodeURIComponent(c.query)}${c.role?'&role='+c.role:''}`);
     if(route==='expert-directions') [c.experts,c.nominations,c.directions]=await Promise.all(['/admin/users?role=expert&limit=200','/admin/nominations','/admin/expert-directions'].map(url=>request(url)));
+    if(route==='question-bank')c.bank.items=await request(`/admin/questions?limit=30&offset=${c.bank.offset}&q=${encodeURIComponent(c.bank.query)}${c.bank.difficulty?'&difficulty='+c.bank.difficulty:''}`);
     if(route==='content-editor'){c.cms.items=await request(`/admin/content?limit=30&offset=${c.cms.offset}&q=${encodeURIComponent(c.cms.query)}${c.cms.kind?'&kind='+c.cms.kind:''}`);}
     if(route==='communications') c.messages=await request('/admin/messages?limit=100');
     if(route==='notifications') c.notifications=await request('/notifications');
@@ -86,7 +88,21 @@ export function createConsole(s,ui) {
       if(action==='new') c.selected='';
       ui.render();
     }
-    if(action==='cms-new'||action==='cms-select'){
+    if(action==='bank-new'||action==='bank-select'){
+      if(!canLeave())return true;
+      c.bank.selected=action==='bank-select'?c.bank.items.find(row=>row.id===target.dataset.id):null;ui.render();
+    }
+    if(action==='bank-prev'||action==='bank-next'){
+      if(!canLeave())return true;
+      c.bank.offset=Math.max(0,c.bank.offset+(action==='bank-next'?30:-30));await refresh();
+    }
+    if(action==='bank-delete'){
+      if(!window.confirm('Удалить вопрос из банка? Уже начатые попытки сохранят его копию.'))return true;
+      busy=true;target.disabled=true;
+      try{await request(`/admin/questions/${c.bank.selected.id}`,{method:'DELETE'});c.bank.selected=null;dirty=false;await refresh();ui.toast('Вопрос удалён.');}
+      finally{busy=false;target.disabled=false;}
+    }
+    if(action==='cms-new' ||action==='cms-select'){
       if(!canLeave())return true;
       c.cms.selected=action==='cms-select'?target.dataset.id:'';ui.render();
     }
@@ -118,13 +134,32 @@ export function createConsole(s,ui) {
     if(busy||!form.reportValidity())return;
     const data=Object.fromEntries(new FormData(form));
     const type=form.dataset.consoleForm;
+    if(type==='bank-filter'){if(!canLeave())return;c.bank.query=data.q;c.bank.difficulty=data.difficulty;c.bank.offset=0;await refresh();return;}
     if(type==='cms-filter'){if(!canLeave())return;c.cms.query=data.q;c.cms.kind=data.kind;c.cms.offset=0;await refresh();return;}
     if(type==='people') {c.query=data.q;c.role=data.role;c.offset=0;await refresh();return;}
     if(type==='announcement'&&!window.confirm(`Отправить уведомление всем активным аккаунтам роли «${labels[data.role]}»?`))return;
     busy=true;
-    const submit=form.querySelector('[type=submit]');submit.disabled=true;
+    const submit=form.querySelector('[type=submit]');
+    const controls=[...document.querySelectorAll('.console-content input,.console-content textarea,.console-content select,.console-content button')].map(node=>[node,node.disabled]);
+    controls.forEach(([node])=>{node.disabled=true;});
     const message=form.querySelector('.form-message');message.textContent='Сохраняем…';
     try {
+      if(type==='bank'){
+        const options=[],correct=[];
+        for(let index=0;index<8;index++){
+          const text=data[`answer_${index}`].trim(),id=data[`id_${index}`];
+          if(data[`correct_${index}`]==='on'){
+            if(!text)throw new Error('Заполни текст каждого отмеченного правильного ответа.');
+            correct.push(id);
+          }
+          if(text)options.push({id,text});
+        }
+        if(options.length<2||!correct.length)throw new Error('Добавь минимум два варианта и отметь правильный ответ.');
+        const body={text:data.text,topic:data.topic,difficulty:data.difficulty,options,correct_option_ids:correct,explanation:data.explanation,is_active:data.active==='on'};
+        const item=c.bank.selected;
+        const result=await request(`/admin/questions${item?'/'+item.id:''}`,{method:item?'PUT':'POST',body});
+        dirty=false;c.bank.selected=result;await refresh();ui.toast('Вопрос сохранён.');
+      }
       if(type==='cms'){
         const item=c.cms.items.find(row=>row.id===c.cms.selected);
         const extra={...(item?.extra||{}),caption:data.caption,resource_url:data.resource_url,archive:data.archive==='on',year:data.year?Number(data.year):null};
@@ -157,12 +192,12 @@ export function createConsole(s,ui) {
         dirty=false;form.reset();message.textContent=`Создано уведомлений: ${result.notifications_created}.`;ui.toast('Уведомление опубликовано в кабинетах.');
       }
     } catch(error){message.textContent=error.message;}
-    finally{busy=false;submit.disabled=false;}
+    finally{busy=false;controls.forEach(([node,disabled])=>{if(node.isConnected)node.disabled=disabled;});submit.disabled=false;}
   }
   function input(event) {
     if(event.target.id==='cms-kind')document.querySelector('.cms-media-fields').hidden=event.target.value!=='media';
     const form=event.target.closest('[data-console-form]');
-    if(form&&!['people','cms-filter'].includes(form.dataset.consoleForm)) dirty=true;
+    if(form&&!['people','cms-filter','bank-filter'].includes(form.dataset.consoleForm)) dirty=true;
     if(form?.dataset.consoleForm==='announcement') {
       document.querySelector('[data-preview-title]').textContent=form.elements.title.value||'Заголовок уведомления';
       document.querySelector('[data-preview-body]').textContent=form.elements.body.value||'Текст появится здесь по мере ввода.';
