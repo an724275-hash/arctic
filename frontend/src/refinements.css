@@ -28,8 +28,37 @@
 .certificate-preview { border-radius:4px; }
 dialog::backdrop { background:rgba(24,56,71,.38); }
 .shell .footer-links>button { min-height:44px; padding:8px 12px; border-radius:6px; }
+.shell .nav-group { flex-shrink:0; }
+.shell .nav-group>summary { padding:8px 12px; border-radius:6px; white-space:nowrap; }
+.shell .profile-layout { grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); }
+.shell .profile-layout>*,.shell .profile-layout .panel { min-width:0; }
+.shell .avatar-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; margin:0; }
+.shell .avatar-options label { min-width:0; padding:24px 12px 12px; border-radius:8px; }
+.shell .avatar-options input { width:18px; height:18px; margin:0; top:10px; left:10px; accent-color:var(--blue); }
+.shell .avatar-options img { width:88px; height:88px; }
+.shell .avatar-options span { text-align:center; overflow-wrap:anywhere; }
+.shell .profile-photo-panel>h2 { overflow-wrap:anywhere; }
+.shell .photo-upload { min-width:0; width:100%; padding:20px 12px; border-radius:8px; }
+.shell .profile-layout form>.button { width:100%; }
+.shell .profile-layout .field-guide { padding:16px 0; }
+@media(max-width:1200px) {
+  .shell .header .navigation { display:none; }
+  .shell .header .menu-button { display:grid; }
+  .shell .header-actions { margin-left:auto; flex:none; }
+}
+@media(max-width:900px) {
+  .shell .profile-layout { grid-template-columns:minmax(0,1fr); }
+  .shell .profile-layout>aside { display:block; }
+  .shell .profile-layout>aside>section+section { margin-top:24px; }
+}
 @media(max-width:700px) {
   .shell .stage-tasks li::before { top:8px; left:8px; }
   .shell .stage-tasks li>a,.shell .stage-tasks li>div { min-height:76px; }
   .shell .news-list h2 { font-size:23px; }
+  .shell .profile-layout .panel { padding:20px 16px; }
+  .shell .profile-layout { gap:24px; }
+  .shell .avatar-options img { width:80px; height:80px; }
+  .shell .profile-avatar { width:96px; height:96px; border-radius:16px; }
+  .shell .profile-photo-panel h2 { font-size:22px; }
+  .shell .header .brand { min-width:0; }
 }
