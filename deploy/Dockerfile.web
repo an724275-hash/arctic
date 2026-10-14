@@ -4,6 +4,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/index.html frontend/vite.config.js ./
 COPY frontend/src ./src
+COPY frontend/scripts ./scripts
 COPY frontend/public ./public
 ENV VITE_API_BASE_URL=/api/v1 NODE_OPTIONS=--max-old-space-size=512
 RUN npm run build

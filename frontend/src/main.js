@@ -483,6 +483,7 @@ document.addEventListener('input', event => {
   }
 });
 document.addEventListener('change', event => {
+  if(event.target.id==='profile-photo')profile.preview(event.target);
   if(event.target.id==='region'){const city=document.querySelector('#city');if(city?.value)updateCities(city);}
   if(event.target.dataset.messageStatus){void control.change(event.target);return;}
   control.input(event);profile.input(event);
