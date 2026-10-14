@@ -196,7 +196,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   if (state.user && !workspace.routeAllowed(next)) next = workspace.defaultRoute();
   if(state.user && !control.rolesAllowed(next)) next=workspace.defaultRoute();
   const nav = ++navigation;
-  state.route = next; state.error = ''; state.loading = (protectedRoutes.has(next) || next === 'article') && reload;
+  state.route = next; state.error = ''; state.loading = (protectedRoutes.has(next) || consoleRoutes.has(next) || next === 'article') && reload;
   if (next === 'article') state.articleSlug = id || '';
   writeRoute(routeHash(next, id), historyMode);
   render(true);
@@ -369,17 +369,20 @@ async function authenticate(form, registration) {
     guardian_name: data.guardian_name || null, guardian_email: data.guardian_email || null,
     guardian_consent: data.guardian_consent === 'on', consent: data.consent === 'on',
   };
+  let authenticated = false;
   await withForm(form, async () => {
     const session = await request(`/auth/${registration ? 'register' : 'login'}`, { method: 'POST', body: payload, auth: false });
     setSession(session); state.user = session.user;
     await loadPublic();
-    await navigate(state.mentorToken?'teacher-invite':registration ? 'dashboard' : pendingRoute, { force: true });
-    pendingRoute = 'dashboard';
-    if (registration) {
-      playCue('welcome');
-      toast('Аккаунт создан. Добро пожаловать в экспедицию!');
-    }
+    authenticated = true;
   });
+  if (!authenticated) return;
+  await navigate(state.mentorToken?'teacher-invite':registration ? 'dashboard' : pendingRoute, { force: true });
+  pendingRoute = 'dashboard';
+  if (registration) {
+    playCue('welcome');
+    toast('Аккаунт создан. Добро пожаловать в экспедицию!');
+  }
 }
 
 function reviewAnswers() {

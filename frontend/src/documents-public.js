@@ -9,7 +9,7 @@ export const documentTypes = {
 export function documentResource(item) {
   const url = externalResource(item?.extra?.resource_url);
   if (!url) return '';
-  return `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">Открыть документ ${icon('file')}</a>`;
+  return `<a class="text-link" aria-label="Открыть документ: ${e(item.title)}" href="${e(url)}" target="_blank" rel="noopener noreferrer">Открыть документ ${icon('file')}</a>`;
 }
 
 export function participationDocuments(content) {
