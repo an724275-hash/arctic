@@ -36,12 +36,12 @@ def seed_catalog(db):
         if not db.scalar(select(Nomination).where(Nomination.title == title)):
             db.add(
                 Nomination(
-                    title=title, description="Демонстрационная номинация. Заменить по Положению конкурса."
+                    title=title, description=""
                 )
             )
     for name, weight in (("Актуальность", 1), ("Обоснованность", 2), ("Качество представления", 1)):
         if not db.scalar(select(Criterion).where(Criterion.name == name)):
-            db.add(Criterion(name=name, max_score=10, weight=weight, description="Демонстрационный критерий"))
+            db.add(Criterion(name=name, max_score=10, weight=weight, description=""))
     for position, (slug, title) in enumerate(
         (
             ("registration", "Регистрация"),

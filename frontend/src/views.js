@@ -1,3 +1,4 @@
+import {publicCriteria} from './public-criteria.js';
 import {presenceLabel} from './presence.js';
 import {formatFileSize} from './ui.js';
 import {participationDocuments} from './documents-public.js';
@@ -33,7 +34,7 @@ export function landing(s) {
   const news = s.content.filter(item => item.kind === 'news' && item.slug !== 'demo-materials').slice(0, 3);
   return `<div class="participant-home">
     <section class="north-cover">
-      <div class="cover-copy"><p class="cover-kicker">Школьный конкурс об Арктике</p><h1 tabindex="-1">Удивительная<br>и неизведанная<br>Арктика</h1><p class="cover-intro">Узнай, как устроена жизнь на Севере, проверь свои знания и представь собственное исследование. От первого вопроса до проекта, который увидят эксперты.</p><div class="cover-actions">${button(s.user ? 'Открыть мой кабинет' : 'Пройти тестирование', go('dashboard'))}</div>${presenceLabel()}</div>
+      <div class="cover-copy"><p class="cover-kicker">Школьный конкурс об Арктике</p><h1 tabindex="-1">Удивительная<br>и неизведанная<br>Арктика</h1><p class="cover-intro">Узнай, как устроена жизнь на Севере, проверь свои знания и представь собственное исследование. От первого вопроса до проекта, который увидят эксперты.</p><div class="cover-actions">${button('Пройти тестирование', go('testing'))}</div>${presenceLabel()}</div>
       ${soundButton('hero')}<picture class="cover-bear"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/arctic-bear.webp"><img src="/assets/arctic-bear-animated.webp" width="648" height="648" alt="Белый медвежонок в голубой шапке приветствует участников"></picture><img class="cover-landscape" fetchpriority="high" src="/assets/arctic-landscape.webp" width="1672" height="941" alt="Снежные горы и льды арктического побережья">
     </section>
 
@@ -62,6 +63,7 @@ export function participationView(s) {
     ${contestPath(s)}
     <section class="submission-desk" id="submission-requirements"><div><h2>Что приложить к работе</h2><p>В основном документе покажи вопрос, цель, метод, собственные результаты и выводы. Для чужих фактов и изображений укажи авторов и источники. Наставник может проверить материалы до отправки.</p></div><dl class="document-specs"><div><dt>Исследование</dt><dd>PDF или DOCX <span>обязательно</span></dd></div><div><dt>Презентация</dt><dd>PDF или PPTX <span>по желанию</span></dd></div><div><dt>Видео</dt><dd>MP4, WebM или ссылка <span>по желанию</span></dd></div><div><dt>Размер файла</dt><dd>До 30 МБ</dd></div></dl></section>
     <section class="public-section public-faq"><h2>Вопросы перед стартом</h2><details><summary>Нужен ли готовый проект при регистрации?</summary><p>Нет. Сначала можно изучить материалы и пройти тест. Первую идею проекта сохрани в черновике и возвращайся к ней по мере подготовки.</p></details><details><summary>Можно ли остановить тест и вернуться позже?</summary><p>Сохранённые ответы останутся в кабинете, но время попытки не останавливается. При возврате ты продолжишь тот же тест с оставшимся временем.</p></details><details><summary>Где посмотреть сертификат и оценку проекта?</summary><p>Сертификат доступен в кабинете после завершения теста. Оценки проекта и комментарии экспертов появятся после публикации результатов организатором.</p></details><details><summary>Как выбрать тему исследования?</summary><p>Начни с одного конкретного вопроса. Определи, какие источники или наблюдения помогут на него ответить, и обсуди план с педагогом.</p><a class="text-link" href="/materials/idea" data-article="idea">Заметка о выборе темы ${icon('arrow')}</a></details></section>
+    ${publicCriteria(s.criteria)}
     ${participationDocuments(s.content)}
     <div class="public-action"><div><h2>Начать участие</h2><p>Тест, черновики и результаты находятся в твоём кабинете.</p></div>${button(s.user ? 'Открыть кабинет' : 'Начать участие', go('dashboard'))}</div>
   </div>`;

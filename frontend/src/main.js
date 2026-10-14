@@ -1,3 +1,4 @@
+import {testEntry} from './test-entry.js';
 import {installPresence, syncPresence} from './presence.js';
 import {installContact} from './contact.js';
 import {installAssistant, syncAssistant} from './assistant.js';
@@ -23,7 +24,7 @@ import {mentorView,createMentor} from './mentor.js';
 import './layout.css';
 import './refinements.css';
 
-const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
+const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, testing:testEntry,profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
 
 const app = document.querySelector('#app');
 const dialog = document.querySelector('#dialog');
@@ -32,7 +33,7 @@ const state = {
   attempts: [], projects: [], certificates: [], attempt: null, answers: {}, question: 0, deadline: 0,
   project: null, file: null, materials: {}, projectReviews: [], defenses: [], article: null, articleSlug: '', saving: false, answerError: '', loading: false, error: '', publicError: '',
 };
-const protectedRoutes = new Set(['dashboard', 'quiz', 'quiz-confirm', 'result', 'project', 'submitted', 'workspace', 'review-project', 'rankings']);
+const protectedRoutes = new Set(['testing','dashboard', 'quiz', 'quiz-confirm', 'result', 'project', 'submitted', 'workspace', 'review-project', 'rankings']);
 consoleRoutes.forEach(route=>protectedRoutes.add(route));
 protectedRoutes.add('profile');
 protectedRoutes.add('awards');
@@ -132,9 +133,9 @@ function currentFormMessage(message, success = false) {
 async function loadPublic() {
   const results = await Promise.allSettled([
     request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=100', { auth: false }), request('/stages',{auth:false}),
-    request('/capabilities',{auth:false}),
+    request('/capabilities',{auth:false}), request('/criteria',{auth:false}),
   ]);
-  ['config', 'nominations', 'content','stages','capabilities'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
+  ['config', 'nominations', 'content','stages','capabilities','criteria'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
   state.publicError = results.some(r => r.status === 'rejected') ? 'Часть материалов пока недоступна. Попробуй обновить страницу позже.' : '';
 }
 async function loadDashboard() {
@@ -193,8 +194,8 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   if (dialog.open) dialog.close();
   if (protectedRoutes.has(next) && !state.user) { pendingRoute = routeHash(next, id); next = 'login'; }
   if (['login', 'register', 'dashboard'].includes(next) && state.user) next = workspace.defaultRoute();
-  if(state.user?.role==='partner'&&['quiz','quiz-confirm','result','project','submitted','awards'].includes(next))next='dashboard';
-  if (state.user && ['admin','commission','expert','teacher'].includes(state.user.role) && ['quiz','quiz-confirm','result','project','submitted'].includes(next)) next = ['project','submitted'].includes(next) && id ? 'review-project' : 'workspace';
+  if(state.user?.role==='partner'&&['testing','quiz','quiz-confirm','result','project','submitted','awards'].includes(next))next='dashboard';
+  if (state.user && ['admin','commission','expert','teacher'].includes(state.user.role) && ['testing','quiz','quiz-confirm','result','project','submitted'].includes(next)) next = ['project','submitted'].includes(next) && id ? 'review-project' : 'workspace';
   if (state.user && !workspace.routeAllowed(next)) next = workspace.defaultRoute();
   if(state.user && !control.rolesAllowed(next)) next=workspace.defaultRoute();
   const nav = ++navigation;
@@ -210,6 +211,11 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
       if(next==='profile') await profile.load();
       if(next==='teacher-invite')await mentor.load();
       if(next==='awards') await loadDashboard();
+      if (next === 'testing') {
+        state.attempts = await request('/quiz/attempts');
+        const active = state.attempts.find(attempt => attempt.status === 'active');
+        if (active) { await navigate('quiz', {id: active.id, force: true}); return; }
+      }
       if (next === 'dashboard') await loadDashboard();
       if (next === 'quiz' || next === 'quiz-confirm' || next === 'result') {
         let attemptId = id || state.attempt?.id;
@@ -379,7 +385,7 @@ async function authenticate(form, registration) {
     authenticated = true;
   });
   if (!authenticated) return;
-  await navigate(state.mentorToken?'teacher-invite':registration ? 'dashboard' : pendingRoute, { force: true });
+  await navigate(state.mentorToken?'teacher-invite':pendingRoute, { force: true });
   pendingRoute = 'dashboard';
   if (registration) {
     playCue('welcome');

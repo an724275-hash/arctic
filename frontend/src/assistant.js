@@ -49,6 +49,24 @@ function closeAssistant() {
   if(hadFocus) toggle.focus();
 }
 
+let dockFrame = 0;
+function scheduleDock() {
+  if (dockFrame) return;
+  dockFrame = requestAnimationFrame(() => {
+    dockFrame = 0;
+    if (!widget || widget.classList.contains('keyboard-open')) return;
+    const nav = document.querySelector('.bottom-nav');
+    const previous = parseFloat(widget.style.getPropertyValue('--assistant-extra-bottom')) || 0;
+    const base = parseFloat(getComputedStyle(widget).bottom) - previous;
+    const height = widget.querySelector('.assistant-tools').getBoundingClientRect().height;
+    const navRect = nav?.getBoundingClientRect();
+    const overlaps = navRect?.width && navRect.top < innerHeight - base
+      && navRect.bottom > innerHeight - base - height;
+    const extra = overlaps ? Math.max(0, innerHeight - navRect.top + 12 - base) : 0;
+    widget.style.setProperty('--assistant-extra-bottom', `${extra}px`);
+  });
+}
+
 export function syncAssistant(route) {
   if(!widget) return;
   const nextAccount=getSession()?.user?.id||null;
@@ -56,6 +74,7 @@ export function syncAssistant(route) {
   const blocked=['quiz','quiz-confirm'].includes(route);
   widget.querySelector('[data-assistant-toggle]').disabled=blocked;
   if(blocked) closeAssistant();
+  scheduleDock();
 }
 
 export function installAssistant(route = () => '') {
@@ -65,6 +84,9 @@ export function installAssistant(route = () => '') {
   widget.setAttribute('aria-label','Помощник и навигация');
   widget.innerHTML=`<section id="assistant-window" class="assistant-window" role="dialog" aria-labelledby="assistant-title" hidden><button type="button" class="assistant-close" aria-label="Закрыть помощника">${icon('close')}</button>${assistantPanel()}</section><div class="assistant-tools"><button type="button" class="assistant-top" aria-label="Наверх" title="Наверх" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 20V4m-7 7 7-7 7 7"/></svg></button><button type="button" class="assistant-launcher" data-assistant-toggle aria-controls="assistant-window" aria-expanded="false" aria-label="Открыть GigaChat" title="Помощник GigaChat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 11a8 8 0 0 1-8 8H5l-4 3V11a9 9 0 0 1 19 0Z"/><path d="M6 10h9M6 14h6"/></svg></button></div>`;
   document.body.append(widget);
+  window.addEventListener('scroll',scheduleDock,{passive:true});
+  window.addEventListener('resize',scheduleDock);
+  document.fonts?.ready.then(scheduleDock);
   const panel=widget.querySelector('#assistant-window');
   const toggle=widget.querySelector('[data-assistant-toggle]');
   toggle.addEventListener('click',()=>{

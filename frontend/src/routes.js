@@ -1,5 +1,5 @@
 const paths = {
-  partners:'/partners',media:'/media', contacts: '/contacts', home: '/', about: '/about', participation: '/participation', materials: '/materials',
+  testing:'/test',partners:'/partners',media:'/media', contacts: '/contacts', home: '/', about: '/about', participation: '/participation', materials: '/materials',
   rules: '/rules', help: '/help',news:'/news',preparation:'/preparation', 'verify-email': '/verify-email', 'reset-password': '/reset-password',
   'teacher-invite':'/teacher-invite',
 };
@@ -26,7 +26,7 @@ export function routeUrl(route, query = '') {
 }
 
 export const pageTitles = {
-  preparation:'Подготовка к конкурсу','expert-directions':'Направления экспертов',
+  testing:'Тест по Арктике',preparation:'Подготовка к конкурсу','expert-directions':'Направления экспертов',
   'question-bank':'Банк вопросов','content-editor':'Контент сайта',overview:'Обзор конкурса','contest-settings':'Настройки конкурса',people:'Участники',communications:'Обращения и уведомления',notifications:'Уведомления',profile:'Настройки профиля',awards:'Документы и награды',news:'Новости',
   home: 'Открой свою Арктику', about: 'О конкурсе', participation: 'Как участвовать',
   materials: 'Открывай Север', article: 'Материал', rules: 'Положение о конкурсе',
