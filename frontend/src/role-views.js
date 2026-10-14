@@ -1,3 +1,4 @@
+import {formatFileSize} from './ui.js';
 import { escapeHtml as e, icon, button, heading } from './ui.js';
 import { projectStatusNames, reviewCards, defensesPanel } from './review-components.js';
 
@@ -49,7 +50,7 @@ export function workspace(s) {
 }
 
 function materialPanel(project) {
-  return `<section class="panel"><h2>Материалы исследования</h2><p class="project-abstract">${e(project.abstract)}</p>${project.files.length ? `<div class="file-list">${project.files.map(file => `<div class="file-item">${icon('file')}<div><strong>${e(file.original_name)}</strong><small>${({document:'Основной документ',presentation:'Презентация',video:'Видео'})[file.kind] || 'Материал'} · ${(file.size_bytes/1024/1024).toFixed(2)} МБ</small><div class="file-actions">${file.media_type === 'application/pdf' || /\.pdf$/i.test(file.original_name) ? `<button class="link-button" data-role-preview="${e(file.id)}">Открыть PDF</button>` : ''}<button class="link-button" data-file="${e(file.id)}" data-filename="${e(file.original_name)}">Скачать</button></div></div></div>`).join('')}</div>` : '<p class="role-empty">Материалы не загружены.</p>'}${project.video_url ? `<a class="text-link" href="${e(project.video_url)}" target="_blank" rel="noopener noreferrer">Посмотреть видео по ссылке ${icon('arrow')}</a>` : ''}</section>`;
+  return `<section class="panel"><h2>Материалы исследования</h2><p class="project-abstract">${e(project.abstract)}</p>${project.files.length ? `<div class="file-list">${project.files.map(file => `<div class="file-item">${icon('file')}<div><strong>${e(file.original_name)}</strong><small>${({document:'Основной документ',presentation:'Презентация',video:'Видео'})[file.kind] || 'Материал'} · ${formatFileSize(file.size_bytes)}</small><div class="file-actions">${file.media_type === 'application/pdf' || /\.pdf$/i.test(file.original_name) ? `<button class="link-button" data-role-preview="${e(file.id)}">Открыть PDF</button>` : ''}<button class="link-button" data-file="${e(file.id)}" data-filename="${e(file.original_name)}">Скачать</button></div></div></div>`).join('')}</div>` : '<p class="role-empty">Материалы не загружены.</p>'}${project.video_url ? `<a class="text-link" href="${e(project.video_url)}" target="_blank" rel="noopener noreferrer">Посмотреть видео по ссылке ${icon('arrow')}</a>` : ''}</section>`;
 }
 
 function moderationPanel() {

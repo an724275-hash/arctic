@@ -32,3 +32,12 @@ function heading(title, subtitle) {
 }
 
 export { escapeHtml, icon, mark, button, heading, go, act };
+
+export function formatFileSize(bytes) {
+  const size = Number(bytes);
+  if (!Number.isFinite(size) || size < 0) return 'Размер не указан';
+  if (size < 1024) return `${Math.round(size)} Б`;
+  const megabytes = size >= 1024 * 1024;
+  const value = size / (megabytes ? 1024 * 1024 : 1024);
+  return `${value.toLocaleString('ru-RU', {maximumFractionDigits: 2})} ${megabytes ? 'МБ' : 'КБ'}`;
+}
