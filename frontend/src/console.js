@@ -1,13 +1,14 @@
+import {cmsView} from './cms.js';
 import {request,download} from './api.js';
 import {escapeHtml as e,icon,heading} from './ui.js';
 import './console.css';
 import {expertSettings} from './expert-settings.js';
 import {testingSettings} from './testing-settings.js';
 
-export const consoleRoutes = new Set(['overview','contest-settings','people','expert-directions','communications','notifications']);
+export const consoleRoutes = new Set(['content-editor','overview','contest-settings','people','expert-directions','communications','notifications']);
 const labels = {participant:'Участник',teacher:'Наставник',expert:'Эксперт',admin:'Организатор',commission:'Комиссия',partner:'Партнёр'};
 const statuses = {draft:'Черновик',submitted:'Проверка',admitted:'Допущен',rejected:'Исправления',reviewing:'Экспертиза',evaluated:'Оценён'};
-const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
+const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['content-editor','book','Контент'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
 const link = (route,label,symbol='arrow')=>`<a href="/#${route}" data-route="${route}">${icon(symbol)}<span>${e(label)}</span></a>`;
 const date = value=>value ? new Date(value).toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'}) : 'Срок не указан';
 const num = value=>Number(value || 0).toLocaleString('ru-RU');
@@ -54,10 +55,10 @@ function notifications(s) {
   const rows=s.console.notifications;
   return `${heading('Уведомления','Сообщения организатора и события участия. Здесь нет рекламной рассылки или сообщений из внешних сервисов.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
 }
-export const consoleViews={overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
+export const consoleViews={'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
 
 export function createConsole(s,ui) {
-  s.console={stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
+  s.console={cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
   let busy=false,dirty=false;
   const c=s.console;
   const rolesAllowed=route=>route==='notifications' ? Boolean(s.user) : route==='overview' ? ['admin','commission'].includes(s.user?.role) : !consoleRoutes.has(route)||s.user?.role==='admin';
@@ -67,6 +68,7 @@ export function createConsole(s,ui) {
     if(route==='contest-settings') { [c.stages,c.nominations,c.criteria,c.quizConfig]=await Promise.all(['/admin/stages','/admin/nominations','/admin/criteria','/admin/quiz-config'].map(url=>request(url)));if(c.tab!=='testing'&&!c[c.tab].some(row=>row.id===c.selected)) c.selected=c[c.tab][0]?.id||''; }
     if(route==='people') c.people=await request(`/admin/users?limit=30&offset=${c.offset}&q=${encodeURIComponent(c.query)}${c.role?'&role='+c.role:''}`);
     if(route==='expert-directions') [c.experts,c.nominations,c.directions]=await Promise.all(['/admin/users?role=expert&limit=200','/admin/nominations','/admin/expert-directions'].map(url=>request(url)));
+    if(route==='content-editor'){c.cms.items=await request(`/admin/content?limit=30&offset=${c.cms.offset}&q=${encodeURIComponent(c.cms.query)}${c.cms.kind?'&kind='+c.cms.kind:''}`);}
     if(route==='communications') c.messages=await request('/admin/messages?limit=100');
     if(route==='notifications') c.notifications=await request('/notifications');
   }
@@ -84,7 +86,26 @@ export function createConsole(s,ui) {
       if(action==='new') c.selected='';
       ui.render();
     }
-    if(action==='refresh') await refresh();
+    if(action==='cms-new'||action==='cms-select'){
+      if(!canLeave())return true;
+      c.cms.selected=action==='cms-select'?target.dataset.id:'';ui.render();
+    }
+    if(action==='cms-prev'||action==='cms-next'){
+      if(!canLeave())return true;
+      c.cms.offset=Math.max(0,c.cms.offset+(action==='cms-next'?30:-30));await refresh();
+    }
+    if(action==='cms-preview'){
+      const form=document.querySelector('[data-console-form=cms]');
+      const data=Object.fromEntries(new FormData(form));
+      ui.modal('Предпросмотр',`<h3>${e(data.title)}</h3><p>${e(data.excerpt)}</p><div class="cms-preview-text">${e(data.body)}</div>`);
+    }
+    if(action==='cms-delete'){
+      if(!window.confirm('Удалить материал? Он исчезнет с сайта. Несохранённые изменения будут потеряны.'))return true;
+      busy=true;target.disabled=true;
+      try{await request(`/admin/content/${c.cms.selected}`,{method:'DELETE'});c.cms.selected='';dirty=false;await ui.reloadPublic();await refresh();ui.toast('Материал удалён.');}
+      finally{busy=false;target.disabled=false;}
+    }
+    if(action==='refresh'){if(!canLeave())return true;await refresh();}
     if(action==='export-projects'||action==='export-users') await download(`/admin/export/${action==='export-projects'?'projects':'users'}.csv`,`${action==='export-projects'?'Проекты':'Участники'}.csv`);
     if(action==='export-reviews')await download('/admin/export/reviews.csv','Оценки-экспертов.csv');
     if(action==='export-analytics')await download('/admin/export/analytics.json','Аналитика.json');
@@ -97,12 +118,21 @@ export function createConsole(s,ui) {
     if(busy||!form.reportValidity())return;
     const data=Object.fromEntries(new FormData(form));
     const type=form.dataset.consoleForm;
+    if(type==='cms-filter'){if(!canLeave())return;c.cms.query=data.q;c.cms.kind=data.kind;c.cms.offset=0;await refresh();return;}
     if(type==='people') {c.query=data.q;c.role=data.role;c.offset=0;await refresh();return;}
     if(type==='announcement'&&!window.confirm(`Отправить уведомление всем активным аккаунтам роли «${labels[data.role]}»?`))return;
     busy=true;
     const submit=form.querySelector('[type=submit]');submit.disabled=true;
     const message=form.querySelector('.form-message');message.textContent='Сохраняем…';
     try {
+      if(type==='cms'){
+        const item=c.cms.items.find(row=>row.id===c.cms.selected);
+        const extra={...(item?.extra||{}),caption:data.caption,resource_url:data.resource_url,archive:data.archive==='on',year:data.year?Number(data.year):null};
+        if(data.photo)extra.image=data.photo;else delete extra.image;
+        const body={kind:data.kind,title:data.title,slug:data.slug,body:data.body,excerpt:data.excerpt,image_url:data.photo.startsWith('https://')?data.photo:null,extra,published:data.published==='on'};
+        const result=await request(`/admin/content${item?'/'+item.id:''}`,{method:item?'PUT':'POST',body});
+        dirty=false;c.cms.selected=result.id;c.cms.offset=0;c.cms.query='';c.cms.kind='';await ui.reloadPublic();await refresh();ui.toast(result.published?'Материал опубликован.':'Черновик сохранён.');
+      }
       if(type==='create-account'){
         await request('/admin/users',{method:'POST',body:{full_name:data.full_name,email:data.email,password:data.password,role:data.role}});
         dirty=false;await refresh();ui.toast('Аккаунт создан. Передайте данные пользователю лично.');
@@ -130,8 +160,9 @@ export function createConsole(s,ui) {
     finally{busy=false;submit.disabled=false;}
   }
   function input(event) {
+    if(event.target.id==='cms-kind')document.querySelector('.cms-media-fields').hidden=event.target.value!=='media';
     const form=event.target.closest('[data-console-form]');
-    if(form&&form.dataset.consoleForm!=='people') dirty=true;
+    if(form&&!['people','cms-filter'].includes(form.dataset.consoleForm)) dirty=true;
     if(form?.dataset.consoleForm==='announcement') {
       document.querySelector('[data-preview-title]').textContent=form.elements.title.value||'Заголовок уведомления';
       document.querySelector('[data-preview-body]').textContent=form.elements.body.value||'Текст появится здесь по мере ввода.';

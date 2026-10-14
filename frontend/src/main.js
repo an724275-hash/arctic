@@ -48,7 +48,7 @@ let activeUrl = `${location.pathname}${location.search}${location.hash}`;
 let activeHistoryIndex = Number.isInteger(history.state?.arcticIndex) ? history.state.arcticIndex : 0;
 let restoringHistory = false;
 const workspace = createWorkspace(state, { render, navigate, toast, modal });
-const control = createConsole(state,{render,toast,reloadPublic:loadPublic});
+const control = createConsole(state,{render,toast,modal,reloadPublic:loadPublic});
 const profile = createProfile(state,{render,toast});
 const mentor=createMentor(state);
 
@@ -428,7 +428,7 @@ async function action(name) {
       workspace.reset();
       control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],['contacts','Связь с организатором'],...(state.user?[['profile','Настройки профиля'],...(state.user.role==='partner'?[]:[['awards','Мои документы']]),['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
+    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['media','Медиатека'],['rules','Положение'],['help','Помощь'],['contacts','Связь с организатором'],...(state.user?[['profile','Настройки профиля'],...(state.user.role==='partner'?[]:[['awards','Мои документы']]),['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');

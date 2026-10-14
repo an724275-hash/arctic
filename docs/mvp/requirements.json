@@ -134,14 +134,14 @@
   {
     "id": "TZ-023",
     "requirement": "Фото- и видеогалерея экспедиций.",
-    "status": "не закрыто: нужны отдельная медиатека и материалы экспедиций",
-    "evidence": "frontend/src/routes.js; education.js содержит статьи, а не архив экспедиций"
+    "status": "Раздел и публикация через CMS реализованы; официальное наполнение отсутствует",
+    "evidence": "frontend/src/media.js; output/release/media-e2e.json; публикуются материалы kind=media"
   },
   {
     "id": "TZ-024",
     "requirement": "Архив лучших проектов прошлых лет.",
-    "status": "нужны официальные материалы заказчика и отдельная приёмка",
-    "evidence": "docs/criteria/case6-latest-text.txt; нельзя выдумывать историю, призы и утверждённые условия"
+    "status": "Раздел и публикация через CMS реализованы; официальное наполнение отсутствует",
+    "evidence": "frontend/src/media.js; output/release/media-e2e.json; публикуются материалы kind=media"
   },
   {
     "id": "TZ-025",
@@ -278,8 +278,8 @@
   {
     "id": "TZ-047",
     "requirement": "Добавление/редактирование новостей, страниц, видео.",
-    "status": "API CMS существует; полный интерфейс редактора и комментариев требует завершения",
-    "evidence": "backend/app/content.py/admin_content; frontend/src/console.js"
+    "status": "CMS создан и проверен локально в браузере; добавление/публикация текстовых материалов, ссылки на видео; отдельные редакторы видео и официальное наполнение ещё нужны",
+    "evidence": "frontend/src/cms.js; console.js; backend/app/content.py; output/release/cms-e2e.json"
   },
   {
     "id": "TZ-048",

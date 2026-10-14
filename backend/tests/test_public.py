@@ -87,3 +87,21 @@ def test_large_request_rejected_before_parsing(client, monkeypatch):
     monkeypatch.setattr(settings, "max_upload_mb", 1)
     response = client.post("/api/v1/contact", content=b"x" * (4 * 1024 * 1024))
     assert response.status_code == 413
+
+
+def test_admin_content_search_is_scoped_and_bounded(client, auth_headers):
+    for slug, title in [("search-one", "Искать этот материал"), ("search-two", "Другой материал")]:
+        assert (
+            client.post(
+                "/api/v1/admin/content",
+                headers=auth_headers("admin"),
+                json={"slug": slug, "title": title, "kind": "page"},
+            ).status_code
+            == 201
+        )
+    result = client.get("/api/v1/admin/content?q=Искать&kind=page", headers=auth_headers("admin"))
+    assert [row["slug"] for row in result.json()] == ["search-one"]
+    assert (
+        client.get("/api/v1/admin/content?q=" + "x" * 201, headers=auth_headers("admin")).status_code == 422
+    )
+    assert client.get("/api/v1/admin/content", headers=auth_headers("teacher")).status_code == 403

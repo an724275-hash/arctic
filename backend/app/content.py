@@ -136,6 +136,7 @@ def contact(body: ContactIn, db: Session = Depends(get_db)):
 @router.get("/admin/content", tags=["admin"])
 def admin_content(
     kind: str | None = None,
+    q: str = Query(default="", max_length=200),
     limit: int = Query(100, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -144,9 +145,11 @@ def admin_content(
     stmt = select(Content)
     if kind:
         stmt = stmt.where(Content.kind == kind)
+    if q:
+        stmt = stmt.where(or_(Content.title.ilike(f"%{q}%"), Content.body.ilike(f"%{q}%")))
     return [
         content_out(row)
-        for row in db.scalars(stmt.order_by(Content.updated_at.desc()).limit(limit).offset(offset))
+        for row in db.scalars(stmt.order_by(Content.updated_at.desc(), Content.id).limit(limit).offset(offset))
     ]
 
 
