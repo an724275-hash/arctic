@@ -116,6 +116,9 @@
 .photo-upload>.icon { width:28px; height:28px; }
 .photo-upload>span { font-size:12px; color:var(--muted); overflow-wrap:anywhere; max-width:100%; }
 .photo-upload:hover { background:#ddeaf0; }
+input[type=file]::file-selector-button { border:0; padding:10px 16px; margin-right:12px; border-radius:12px; background:var(--ice); color:var(--ink); font:inherit; cursor:pointer; }
+select { appearance:none; padding-right:42px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23345f73' stroke-width='1.6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+input[type=checkbox],input[type=radio] { accent-color:var(--blue); }
 .profile-photo-panel:has(.photo-input:focus-visible) .photo-upload { outline:3px solid #94b8cd; outline-offset:4px; }
 .profile-email { padding:14px 16px; border-radius:12px; background:var(--ice); overflow-wrap:anywhere; font-size:14px; }
 .avatar-options { border:0; padding:0; display:flex; gap:16px; flex-wrap:wrap; }
@@ -139,6 +142,18 @@
 .education-catalog>a[hidden],[data-library-empty][hidden] { display:none; }
 .news-list { display:grid; gap:36px; }
 .news-list article { padding:32px 0; border-bottom:1px solid var(--line); }
+.news-cover { width:100%; max-width:680px; aspect-ratio:16/9; object-fit:cover; border-radius:22px; margin-bottom:24px; }
+.preparation-cover { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin:32px 0 56px; }
+.preparation-cover img { width:100%; height:auto; border-radius:24px; }
+.preparation-cover h2 { font-size:32px; margin-bottom:20px; }
+.preparation-cover p { line-height:1.8; color:var(--muted); margin-bottom:24px; }
+.preparation-list { padding-left:22px; display:grid; gap:28px; margin-top:24px; }
+.preparation-list p { margin-top:10px; line-height:1.8; color:var(--muted); }
+.preparation-topics { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; margin-top:24px; }
+.preparation-topics a { display:flex; align-items:center; gap:16px; padding:22px 0; border-bottom:1px solid var(--line); }
+.preparation-topics span { color:var(--muted); font-size:13px; }
+.preparation-topics strong { flex:1; font-size:16px; }
+@media(max-width:700px) { .preparation-cover,.preparation-topics { grid-template-columns:1fr; } .preparation-cover { gap:28px; } }
 .news-list time { color:var(--muted); font-size:13px; }
 .news-list h2 { margin:16px 0; font-size:28px; }
 .news-list p { max-width:70ch; color:var(--muted); line-height:1.7; margin-bottom:16px; }

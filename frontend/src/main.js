@@ -14,8 +14,9 @@ import {consoleViews,consoleRoutes,createConsole,consoleFrame} from './console.j
 import {profileView,createProfile} from './profile.js';
 import {updateCities,selectCity,cityKeys} from './geography.js';
 import {awardsView,newsView} from './product-views.js';
+import {preparationView} from './preparation.js';
 
-const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView };
+const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView };
 
 const app = document.querySelector('#app');
 const dialog = document.querySelector('#dialog');
@@ -81,7 +82,7 @@ function updateSeo(){
   meta('description',description);meta('robots',protectedRoutes.has(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
   let canonical=document.head.querySelector('link[rel=canonical]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.append(canonical);}canonical.href=location.origin+location.pathname;
   const old=document.querySelector('#article-schema');old?.remove();
-  if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.png')});document.head.append(script);}
+  if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.webp')});document.head.append(script);}
 }
 let revealObserver;
 function revealSections() {
@@ -394,7 +395,7 @@ async function action(name) {
       workspace.reset();
       control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],['awards','Мои документы'],['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
+    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],['awards','Мои документы'],['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');
