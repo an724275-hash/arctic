@@ -1,3 +1,4 @@
+import {installContact} from './contact.js';
 import {installAssistant} from './assistant.js';
 import './styles.css';
 import './app.css';
@@ -128,9 +129,9 @@ function currentFormMessage(message, success = false) {
 async function loadPublic() {
   const results = await Promise.allSettled([
     request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=100', { auth: false }), request('/stages',{auth:false}),
-    request('/capabilities',{auth:false}),
+    request('/capabilities',{auth:false}), request('/public/stats',{auth:false}),
   ]);
-  ['config', 'nominations', 'content','stages','capabilities'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
+  ['config', 'nominations', 'content','stages','capabilities','publicStats'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
   state.publicError = results.some(r => r.status === 'rejected') ? 'Часть материалов пока недоступна. Попробуй обновить страницу позже.' : '';
 }
 async function loadDashboard() {
@@ -426,7 +427,7 @@ async function action(name) {
       workspace.reset();
       control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],...(state.user.role==='partner'?[]:[['awards','Мои документы']]),['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
+    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],['contacts','Связь с организатором'],...(state.user?[['profile','Настройки профиля'],...(state.user.role==='partner'?[]:[['awards','Мои документы']]),['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');
@@ -587,5 +588,15 @@ async function boot() {
 }
 installNavigationPolish();
 installAssistant();
+installContact();
 void boot();
 
+
+setInterval(async () => {
+  if(state.route !== 'home' || document.hidden || !navigator.onLine) return;
+  try {
+    state.publicStats = await request('/public/stats', {auth:false});
+    const count=document.querySelector('.participation-count');
+    if(count) count.textContent=`Участвуют ${Number(state.publicStats.participants).toLocaleString('ru-RU')} школьников · ${Number(state.publicStats.regions).toLocaleString('ru-RU')} регионов`;
+  } catch { /* без обновления */ }
+},30000);

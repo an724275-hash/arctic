@@ -1,5 +1,5 @@
 const paths = {
-  home: '/', about: '/about', participation: '/participation', materials: '/materials',
+  contacts: '/contacts', home: '/', about: '/about', participation: '/participation', materials: '/materials',
   rules: '/rules', help: '/help',news:'/news',preparation:'/preparation', 'verify-email': '/verify-email', 'reset-password': '/reset-password',
   'teacher-invite':'/teacher-invite',
 };
@@ -30,7 +30,7 @@ export const pageTitles = {
   home: 'Открой свою Арктику', about: 'О конкурсе', participation: 'Как участвовать',
   materials: 'Открывай Север', article: 'Материал', rules: 'Положение о конкурсе',
   help: 'Помощь', 'not-found': 'Страница не найдена', login: 'Вход', register: 'Регистрация',
-  dashboard: 'Мой маршрут', quiz: 'Знакомство с Арктикой', result: 'Мой результат',
+  contacts: 'Связь с организатором', dashboard: 'Мой кабинет', quiz: 'Знакомство с Арктикой', result: 'Мой результат',
   project: 'Мой проект', submitted: 'Статус проекта', workspace: 'Рабочий кабинет',
   'review-project': 'Работа участника', rankings: 'Результаты конкурса',
 };

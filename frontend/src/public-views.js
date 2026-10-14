@@ -1,3 +1,4 @@
+import {contactView} from './contact.js';
 import {assistantPanel} from './assistant.js';
 import { escapeHtml as e, icon } from './ui.js';
 import './public-article.css';
@@ -70,4 +71,4 @@ function notFoundView() {
   return `<section class="reading-page"><h1 tabindex="-1">Страница не найдена</h1><p class="reading-lead">Возможно, адрес изменился. Перейди на главную или открой материалы об Арктике.</p>${link('/', 'home', 'На главную')}</section>`;
 }
 
-export const publicViews = { article: articleView, rules: rulesView, help: helpView, 'not-found': notFoundView };
+export const publicViews = { contacts: contactView, article: articleView, rules: rulesView, help: helpView, 'not-found': notFoundView };
