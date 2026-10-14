@@ -1,6 +1,6 @@
 const paths = {
   home: '/', about: '/about', participation: '/participation', materials: '/materials',
-  rules: '/rules', help: '/help', 'verify-email': '/verify-email', 'reset-password': '/reset-password',
+  rules: '/rules', help: '/help',news:'/news', 'verify-email': '/verify-email', 'reset-password': '/reset-password',
 };
 const aliases = { route: 'participation', library: 'materials' };
 
@@ -24,6 +24,7 @@ export function routeUrl(route, query = '') {
 }
 
 export const pageTitles = {
+  overview:'Обзор конкурса','contest-settings':'Настройки конкурса',people:'Участники',communications:'Обращения и уведомления',notifications:'Уведомления',profile:'Настройки профиля',awards:'Документы и награды',news:'Новости',
   home: 'Открой свою Арктику', about: 'О конкурсе', participation: 'Как участвовать',
   materials: 'Открывай Север', article: 'Материал', rules: 'Положение о конкурсе',
   help: 'Помощь', 'not-found': 'Страница не найдена', login: 'Вход', register: 'Регистрация',

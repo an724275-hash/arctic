@@ -1,3 +1,4 @@
+import {extendedSections} from './education-extra.js';
 export const educationArticles = {
   "arctic": {
     "title": "Арктика: что это и где она начинается?",
@@ -163,3 +164,12 @@ export const educationArticles = {
     ]
   }
 };
+for(const [slug,article] of Object.entries(educationArticles)) article.sections.push(...(extendedSections[slug]||[]));
+educationArticles['polar-bear-guide'].image='/assets/polar-bear-photo.jpg';
+educationArticles['polar-bear-guide'].caption='Белый медведь. Scott Schliebe/USFWS. Public Domain.';
+educationArticles['polar-bear-guide'].imageSource='https://www.fws.gov/media/polar-bear-0';
+for(const slug of ['arctic','fragile-ice']){
+  educationArticles[slug].image='/assets/sea-ice-photo.jpg';
+  educationArticles[slug].caption='Белый медведь на морском льду в море Бофорта. Dr. Pablo Clemente-Colon/NOAA. Public Domain.';
+  educationArticles[slug].imageSource='https://www.fws.gov/media/polar-bear-beaufort-sea-0';
+}

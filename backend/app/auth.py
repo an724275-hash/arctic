@@ -163,6 +163,7 @@ def register(data: RegisterInput, db: Db):
         school=data.school,
         grade=data.grade,
         region=data.region,
+        city=data.city,
         guardian_name=data.guardian_name,
         guardian_email=_email(data.guardian_email) if data.guardian_email else None,
         consent_at=utcnow(),
@@ -357,6 +358,8 @@ def update_profile(data: ProfileInput, db: Db, user: CurrentUser):
     guardian_consent = changes.pop("guardian_consent", False)
     if changes.get("full_name", user.full_name) is None:
         raise HTTPException(status_code=422, detail="Имя не может быть пустым")
+    if 'avatar_kind' in changes and changes['avatar_kind'] is None:
+        raise HTTPException(status_code=422,detail='Выберите один из аватаров')
     if user.birth_date and age_on_today(user.birth_date) < 18:
         if not changes.get("guardian_name", user.guardian_name) or not changes.get(
             "guardian_email", user.guardian_email

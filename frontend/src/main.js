@@ -10,8 +10,12 @@ import { roleViews } from './role-views.js';
 import { createWorkspace } from './roles.js';
 import { readRoute, routeUrl, pageTitles } from './routes.js';
 import { publicViews, articles } from './public-views.js';
+import {consoleViews,consoleRoutes,createConsole,consoleFrame} from './console.js';
+import {profileView,createProfile} from './profile.js';
+import {updateCities,selectCity,cityKeys} from './geography.js';
+import {awardsView,newsView} from './product-views.js';
 
-const routeViews = { ...views, ...roleViews, ...publicViews };
+const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView };
 
 const app = document.querySelector('#app');
 const dialog = document.querySelector('#dialog');
@@ -21,6 +25,9 @@ const state = {
   project: null, file: null, materials: {}, projectReviews: [], defenses: [], article: null, articleSlug: '', saving: false, answerError: '', loading: false, error: '', publicError: '',
 };
 const protectedRoutes = new Set(['dashboard', 'quiz', 'quiz-confirm', 'result', 'project', 'submitted', 'workspace', 'review-project', 'rankings']);
+consoleRoutes.forEach(route=>protectedRoutes.add(route));
+protectedRoutes.add('profile');
+protectedRoutes.add('awards');
 let navigation = 0;
 let pendingRoute = 'dashboard';
 let toastTimer;
@@ -34,6 +41,8 @@ let activeUrl = `${location.pathname}${location.search}${location.hash}`;
 let activeHistoryIndex = Number.isInteger(history.state?.arcticIndex) ? history.state.arcticIndex : 0;
 let restoringHistory = false;
 const workspace = createWorkspace(state, { render, navigate, toast, modal });
+const control = createConsole(state,{render,toast,reloadPublic:loadPublic});
+const profile = createProfile(state,{render,toast});
 
 function routeHash(route, id) {
   if (['project', 'submitted'].includes(route)) id ||= state.project?.id;
@@ -55,13 +64,24 @@ function writeRoute(route, mode = 'replace') {
 
 function render(scroll = false) {
   const page = state.loading ? '<section class="panel loading-panel" role="status"><span class="loader"></span><h1>Загружаем страницу…</h1></section>' : state.error ? errorBox(state.error) : routeViews[state.route](state);
-  app.innerHTML = `<div class="shell">${header(state)}<main id="content" class="scene-enter">${page}</main>${footer(state)}</div>`;
+  const body = ['workspace','review-project','rankings',...consoleRoutes].includes(state.route) ? consoleFrame(state,page) : page;
+  app.innerHTML = `<div class="shell">${header(state)}<main id="content" class="scene-enter">${body}</main>${footer(state)}</div>`;
   document.title = `${state.route === 'article' && state.article ? state.article.title : pageTitles[state.route] || 'Арктика'} | Арктика`;
   app.querySelectorAll('a[data-route]').forEach(link => { link.href = routeUrl(link.dataset.route); });
   if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
   workspace.afterRender();
+  profile.afterRender();
+  updateSeo();
   // Открываем блоки при прокрутке; формы и вопросы остаются сразу видимыми.
   revealSections();
+}
+function updateSeo(){
+  const meta=(name,value,property=false)=>{let node=document.head.querySelector(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=document.createElement('meta');node.setAttribute(property?'property':'name',name);document.head.append(node);}node.content=value;};
+  const description=state.route==='article'&&state.article?(state.article.intro||state.article.excerpt||state.article.body||'').slice(0,280):'Конкурс «Удивительная и неизведанная Арктика»: образовательные материалы, тестирование, исследовательские проекты и сертификаты.';
+  meta('description',description);meta('robots',protectedRoutes.has(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
+  let canonical=document.head.querySelector('link[rel=canonical]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.append(canonical);}canonical.href=location.origin+location.pathname;
+  const old=document.querySelector('#article-schema');old?.remove();
+  if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.png')});document.head.append(script);}
 }
 let revealObserver;
 function revealSections() {
@@ -99,17 +119,19 @@ function currentFormMessage(message, success = false) {
 }
 async function loadPublic() {
   const results = await Promise.allSettled([
-    request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=30', { auth: false }),
+    request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=100', { auth: false }), request('/stages',{auth:false}),
   ]);
-  ['config', 'nominations', 'content'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
+  ['config', 'nominations', 'content','stages'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
   state.publicError = results.some(r => r.status === 'rejected') ? 'Часть материалов пока недоступна. Попробуй обновить страницу позже.' : '';
 }
 async function loadDashboard() {
   const participant = state.user.role === 'participant';
-  const [projects, attempts, certificates, defenses] = await Promise.all([
-    request('/projects'), participant ? request('/quiz/attempts') : [], request('/certificates'), participant ? request('/defenses') : [],
+  const [projects, attempts, certificates, defenses,notifications] = await Promise.all([
+    request('/projects'), participant ? request('/quiz/attempts') : [], request('/certificates'), participant ? request('/defenses') : [], request('/notifications?unread_only=true&limit=100'),
   ]);
   state.projects = projects; state.attempts = attempts; state.certificates = certificates; state.defenses = defenses;
+  state.unreadNotifications=notifications.length;
+  await profile.photo();
 }
 function setAttempt(attempt, resetQuestion = false) {
   state.attempt = attempt;
@@ -141,6 +163,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
     else history.replaceState({ arcticIndex: activeHistoryIndex }, '', activeUrl);
   };
   if (!force && !workspace.canLeave()) return stay();
+  if (!force && (!control.canLeave() || !profile.canLeave())) return stay();
   if (!force && formBusy) { toast('Подожди, завершаем сохранение.'); return stay(); }
   if (!force && state.saving && !( ['quiz', 'quiz-confirm'].includes(state.route) && ['quiz', 'quiz-confirm'].includes(next))) { toast('Подожди, сохраняем ответ.'); return stay(); }
   if (!force && state.answerError && ['quiz','quiz-confirm'].includes(state.route) && !['quiz','quiz-confirm'].includes(next)) { toast('Сначала сохрани ответ повторно или заверши тест.'); return stay(); }
@@ -152,8 +175,9 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   if (dialog.open) dialog.close();
   if (protectedRoutes.has(next) && !state.user) { pendingRoute = routeHash(next, id); next = 'login'; }
   if (['login', 'register', 'dashboard'].includes(next) && state.user) next = workspace.defaultRoute();
-  if (state.user && workspace.defaultRoute() === 'workspace' && ['quiz','quiz-confirm','result','project','submitted'].includes(next)) next = ['project','submitted'].includes(next) && id ? 'review-project' : 'workspace';
+  if (state.user && ['admin','commission','expert','teacher'].includes(state.user.role) && ['quiz','quiz-confirm','result','project','submitted'].includes(next)) next = ['project','submitted'].includes(next) && id ? 'review-project' : 'workspace';
   if (state.user && !workspace.routeAllowed(next)) next = workspace.defaultRoute();
+  if(state.user && !control.rolesAllowed(next)) next=workspace.defaultRoute();
   const nav = ++navigation;
   state.route = next; state.error = ''; state.loading = (protectedRoutes.has(next) || next === 'article') && reload;
   if (next === 'article') state.articleSlug = id || '';
@@ -163,6 +187,9 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
     if (reload) {
       if (next === 'article') state.article = articles[id] || await request(`/content/${encodeURIComponent(id)}`, { auth: false });
       if (workspace.isRoute(next)) await workspace.load(next, id);
+      if(consoleRoutes.has(next)) await control.load(next);
+      if(next==='profile') await profile.load();
+      if(next==='awards') await loadDashboard();
       if (next === 'dashboard') await loadDashboard();
       if (next === 'quiz' || next === 'quiz-confirm' || next === 'result') {
         let attemptId = id || state.attempt?.id;
@@ -316,7 +343,7 @@ async function authenticate(form, registration) {
   let payload = { email: data.email, password: data.password };
   if (registration) payload = {
     ...payload, full_name: data.full_name, birth_date: data.birth_date, role: 'participant',
-    grade: data.grade ? Number(data.grade) : null, school: data.school || null, region: data.region || null,
+    grade: data.grade ? Number(data.grade) : null, school: data.school || null, region: data.region || null,city:data.city||null,
     guardian_name: data.guardian_name || null, guardian_email: data.guardian_email || null,
     guardian_consent: data.guardian_consent === 'on', consent: data.consent === 'on',
   };
@@ -365,8 +392,9 @@ async function action(name) {
       await request('/auth/logout', { method: 'POST' });
       setSession(null); state.user = null; state.attempt = null; state.project = null; state.file = null; state.materials = {}; draftDirty = false;
       workspace.reset();
+      control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['help','Помощь'],['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
+    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],['awards','Мои документы'],['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');
@@ -381,6 +409,9 @@ document.addEventListener('click', async event => {
   if (target.tagName === 'A' && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)) return;
   if (target.matches('a[data-route],a[data-anchor],a[data-article]')) event.preventDefault();
   try {
+    if(target.dataset.readingSection){event.preventDefault();document.getElementById(target.dataset.readingSection)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});return;}
+    if(target.dataset.city){selectCity(target);return;}
+    if(await control.click(target))return;
     if (await workspace.handleClick(target)) { event.preventDefault(); return; }
     if (target.dataset.route) { event.preventDefault(); await navigate(target.dataset.route, { reload: !['quiz', 'quiz-confirm'].includes(target.dataset.route) }); return; }
     if (target.dataset.anchor) { event.preventDefault(); await navigate(({ about: 'about', route: 'participation', library: 'materials' })[target.dataset.anchor] || 'home'); return; }
@@ -403,6 +434,8 @@ document.addEventListener('click', async event => {
 });
 document.addEventListener('submit', async event => {
   const form = event.target;
+  if(form.dataset.consoleForm){event.preventDefault();try{await control.submit(form);}catch(error){toast(error.message);}return;}
+  if(form.dataset.profileForm){event.preventDefault();await profile.submit(form);return;}
   if (['work-filter-form','ranking-filter-form','moderation-form','assignment-form','auto-assignment-form','expert-review-form','defense-form'].includes(form.id)) {
     event.preventDefault();
     try { await workspace.handleSubmit(form); } catch (error) { toast(error.message); }
@@ -427,6 +460,14 @@ document.addEventListener('submit', async event => {
 });
 document.addEventListener('input', event => {
   workspace.handleInput(event);
+  control.input(event);profile.input(event);
+  if(event.target.id==='city')updateCities(event.target);
+  if(event.target.matches('[data-library-search]')){
+    const query=event.target.value.trim().toLocaleLowerCase('ru-RU');
+    const rows=[...document.querySelectorAll('.education-catalog>a')];
+    rows.forEach(row=>row.hidden=!row.textContent.toLocaleLowerCase('ru-RU').includes(query));
+    document.querySelector('[data-library-empty]').hidden=rows.some(row=>!row.hidden);
+  }
   if (event.target.matches('[data-faq-search]')) {
     const query = event.target.value.trim().toLocaleLowerCase('ru-RU');
     const questions = [...document.querySelectorAll('.help-questions details')];
@@ -442,6 +483,9 @@ document.addEventListener('input', event => {
   }
 });
 document.addEventListener('change', event => {
+  if(event.target.id==='region'){const city=document.querySelector('#city');if(city?.value)updateCities(city);}
+  if(event.target.dataset.messageStatus){void control.change(event.target);return;}
+  control.input(event);profile.input(event);
   if (!event.target.matches('[data-upload-kind]')) return;
   const file = event.target.files[0]; if (!file) return;
   const kind = event.target.dataset.uploadKind;
@@ -455,6 +499,7 @@ document.addEventListener('change', event => {
   upload.classList.add('attached');
 });
 document.addEventListener('keydown', event => {
+  cityKeys(event);
   if (event.target.matches('[role="radio"]') && ['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(event.key)) {
     event.preventDefault(); const radios = [...document.querySelectorAll('[role="radio"]')];
     const direction = ['ArrowDown','ArrowRight'].includes(event.key) ? 1 : -1;
@@ -462,6 +507,7 @@ document.addEventListener('keydown', event => {
   }
 });
 window.addEventListener('session-expired', () => {
+  control.reset();profile.reset();
   state.user = null; state.saving = false; state.answerError = ''; state.attempt = null; state.project = null; state.file = null; state.materials = {}; draftDirty = false;
   workspace.reset();
   if (protectedRoutes.has(state.route)) { pendingRoute = 'dashboard'; void navigate('login', { force: true }); toast('Сессия закончилась. Войди снова, чтобы продолжить.'); }
@@ -477,7 +523,7 @@ function followHistory() {
 }
 window.addEventListener('popstate', followHistory);
 window.addEventListener('hashchange', followHistory);
-window.addEventListener('beforeunload', event => { if (draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
 setInterval(() => {
   if (!state.attempt || state.attempt.status !== 'active' || !['quiz','quiz-confirm'].includes(state.route) || state.loading) return;
   const timer = document.querySelector('#timer'); if (timer) timer.textContent = timerText(state);

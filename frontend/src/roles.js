@@ -303,7 +303,7 @@ export function createWorkspace(state, ui) {
 
   return {
     isRoute: route => roleRoutes.has(route),
-    defaultRoute: () => isWorkspace() ? 'workspace' : 'dashboard',
+    defaultRoute: () => ['admin','commission'].includes(state.user?.role) ? 'overview' : isWorkspace() ? 'workspace' : 'dashboard',
     routeAllowed: route => !roleRoutes.has(route) || isWorkspace() && (route !== 'rankings' || analystRoles.has(state.user.role)),
     load, handleClick, handleSubmit, handleInput, canLeave, afterRender: updatePreview,
     get busy() { return busy; }, get dirty() { return dirty; },

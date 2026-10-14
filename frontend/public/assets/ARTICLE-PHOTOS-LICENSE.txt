@@ -1,0 +1,5 @@
+polar-bear-photo.jpg: Scott Schliebe/USFWS, Public Domain.
+https://www.fws.gov/media/polar-bear-0
+sea-ice-photo.jpg: Dr. Pablo Clemente-Colon/NOAA, Public Domain. Фото белого медведя на морском льду в море Бофорта.
+https://www.fws.gov/media/polar-bear-beaufort-sea-0
+Изображения скачаны без изменения; в интерфейсе кадрируются CSS.

@@ -44,8 +44,9 @@ class RegisterInput(InputModel):
     role: Literal["participant", "teacher"] = "participant"
     birth_date: date | None = None
     school: str | None = Field(default=None, max_length=250)
-    grade: int | None = Field(default=None, ge=1, le=12)
+    grade: int | None = Field(default=None, ge=1, le=11)
     region: str | None = Field(default=None, max_length=150)
+    city: str | None = Field(default=None, min_length=2, max_length=150)
     guardian_name: str | None = Field(default=None, max_length=200)
     guardian_email: EmailStr | None = None
     consent: bool
@@ -82,6 +83,8 @@ class UserOutput(BaseModel):
     school: str | None = None
     grade: int | None = None
     region: str | None = None
+    city: str | None = None
+    avatar_kind: str = 'bear'
     guardian_name: str | None = None
     guardian_email: str | None = None
     consent_at: datetime | None = None
@@ -92,10 +95,12 @@ class UserOutput(BaseModel):
 
 
 class ProfileInput(InputModel):
+    avatar_kind: Literal['bear','sakha'] | None = None
     full_name: str | None = Field(default=None, min_length=2, max_length=200)
     school: str | None = Field(default=None, max_length=250)
-    grade: int | None = Field(default=None, ge=1, le=12)
+    grade: int | None = Field(default=None, ge=1, le=11)
     region: str | None = Field(default=None, max_length=150)
+    city: str | None = Field(default=None, min_length=2, max_length=150)
     guardian_name: str | None = Field(default=None, max_length=200)
     guardian_email: EmailStr | None = None
     guardian_consent: bool = False
