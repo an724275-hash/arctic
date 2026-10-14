@@ -6,6 +6,7 @@ import { educationArticles } from './education.js';
 import {geographyFields} from './geography.js';
 import {avatar} from './profile.js';
 import {journey} from './product-views.js';
+import {partnerDashboard} from './partner.js';
 
 export const statusNames = { draft: 'Черновик', submitted: 'На проверке', admitted: 'Допущен к конкурсу', rejected: 'Нужны изменения', reviewing: 'На экспертизе', evaluated: 'Оценён' };
 const status = p => `<span class="status ${p.status === 'admitted' ? 'success' : ''}">${icon(p.status === 'draft' ? 'file' : 'check')}${e(statusNames[p.status] || p.status)}</span>`;
@@ -101,6 +102,7 @@ export function verifyEmail() {
 }
 
 export function dashboard(s) {
+  if(s.user.role==='partner')return partnerDashboard(s);
   const attempt = s.attempts[0];
   const completed = attempt && attempt.status !== 'active';
   const config = s.config;

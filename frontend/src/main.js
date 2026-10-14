@@ -15,6 +15,7 @@ import {profileView,createProfile} from './profile.js';
 import {updateCities,selectCity,cityKeys} from './geography.js';
 import {awardsView,newsView} from './product-views.js';
 import {preparationView} from './preparation.js';
+import {polishPage,installNavigationPolish} from './ux.js';
 
 const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView };
 
@@ -72,6 +73,7 @@ function render(scroll = false) {
   if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
   workspace.afterRender();
   profile.afterRender();
+  polishPage(state);
   updateSeo();
   // Открываем блоки при прокрутке; формы и вопросы остаются сразу видимыми.
   revealSections();
@@ -79,7 +81,7 @@ function render(scroll = false) {
 function updateSeo(){
   const meta=(name,value,property=false)=>{let node=document.head.querySelector(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=document.createElement('meta');node.setAttribute(property?'property':'name',name);document.head.append(node);}node.content=value;};
   const description=state.route==='article'&&state.article?(state.article.intro||state.article.excerpt||state.article.body||'').slice(0,280):'Конкурс «Удивительная и неизведанная Арктика»: образовательные материалы, тестирование, исследовательские проекты и сертификаты.';
-  meta('description',description);meta('robots',protectedRoutes.has(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
+  meta('description',description);meta('robots',protectedRoutes.has(state.route)||['login','register','forgot-password','reset-password','verify-email','not-found'].includes(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
   let canonical=document.head.querySelector('link[rel=canonical]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.append(canonical);}canonical.href=location.origin+location.pathname;
   const old=document.querySelector('#article-schema');old?.remove();
   if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.webp')});document.head.append(script);}
@@ -121,11 +123,16 @@ function currentFormMessage(message, success = false) {
 async function loadPublic() {
   const results = await Promise.allSettled([
     request('/quiz/config', { auth: false }), request('/nominations', { auth: false }), request('/content?limit=100', { auth: false }), request('/stages',{auth:false}),
+    request('/capabilities',{auth:false}),
   ]);
-  ['config', 'nominations', 'content','stages'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
+  ['config', 'nominations', 'content','stages','capabilities'].forEach((key,i) => { if (results[i].status === 'fulfilled') state[key] = results[i].value; });
   state.publicError = results.some(r => r.status === 'rejected') ? 'Часть материалов пока недоступна. Попробуй обновить страницу позже.' : '';
 }
 async function loadDashboard() {
+  if(state.user.role==='partner'){
+    const notifications=await request('/notifications?unread_only=true&limit=100');
+    state.unreadNotifications=notifications.length;await profile.photo();return;
+  }
   const participant = state.user.role === 'participant';
   const [projects, attempts, certificates, defenses,notifications] = await Promise.all([
     request('/projects'), participant ? request('/quiz/attempts') : [], request('/certificates'), participant ? request('/defenses') : [], request('/notifications?unread_only=true&limit=100'),
@@ -176,6 +183,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   if (dialog.open) dialog.close();
   if (protectedRoutes.has(next) && !state.user) { pendingRoute = routeHash(next, id); next = 'login'; }
   if (['login', 'register', 'dashboard'].includes(next) && state.user) next = workspace.defaultRoute();
+  if(state.user?.role==='partner'&&['quiz','quiz-confirm','result','project','submitted','awards'].includes(next))next='dashboard';
   if (state.user && ['admin','commission','expert','teacher'].includes(state.user.role) && ['quiz','quiz-confirm','result','project','submitted'].includes(next)) next = ['project','submitted'].includes(next) && id ? 'review-project' : 'workspace';
   if (state.user && !workspace.routeAllowed(next)) next = workspace.defaultRoute();
   if(state.user && !control.rolesAllowed(next)) next=workspace.defaultRoute();
@@ -395,7 +403,7 @@ async function action(name) {
       workspace.reset();
       control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],['awards','Мои документы'],['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
+    case 'menu': modal('Меню', `<nav class="menu-links">${[['home','Главная'],['about','О конкурсе'],['participation','Как участвовать'],['materials','Открывай Север'],['preparation','Подготовка к конкурсу'],['news','Новости'],['rules','Положение'],['help','Помощь'],...(state.user?[['profile','Настройки профиля'],...(state.user.role==='partner'?[]:[['awards','Мои документы']]),['notifications','Уведомления']]:[]),['dashboard',state.user ? 'Личный кабинет' : 'Войти']].map(([route,label]) => `<a href="${routeUrl(route)}" data-route="${route}" ${state.route === route || route === 'materials' && state.route === 'article' ? 'aria-current="page"' : ''}>${label}</a>`).join('')}${state.user ? '<button class="link-button" data-action="logout">Выйти из аккаунта</button>' : ''}</nav>`); break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');
@@ -542,5 +550,6 @@ async function boot() {
   }
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
+installNavigationPolish();
 void boot();
 

@@ -11,6 +11,17 @@ def test_health_and_postgresql(client):
     assert client.get("/health/ready").json()["database"] == "postgresql"
 
 
+def test_capabilities_do_not_expose_provider_secrets(client, monkeypatch):
+    monkeypatch.setattr(settings, "enable_email_delivery", False)
+    monkeypatch.setattr(settings, "smtp_password", "private-value")
+    response = client.get("/api/v1/capabilities")
+    assert response.status_code == 200
+    assert response.json() == {"email_delivery": False, "vk_id": False}
+    monkeypatch.setattr(settings, "enable_email_delivery", True)
+    monkeypatch.setattr(settings, "smtp_host", "mail.example.com")
+    assert client.get("/api/v1/capabilities").json()["email_delivery"] is True
+
+
 def test_draft_content_stays_private_until_published(client, auth_headers):
     payload = {"slug": "hidden-page", "title": "Скрытый материал", "kind": "page", "body": "Черновик"}
     created = client.post("/api/v1/admin/content", json=payload, headers=auth_headers("admin"))

@@ -6,11 +6,17 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.common import audit, stage_state
+from app.config import settings
 from app.db import get_db
 from app.dependencies import require_roles
 from app.models import ContactMessage, Content, Nomination, Project, Stage, User
 
 router = APIRouter(tags=["public content"])
+
+
+@router.get("/capabilities")
+def capabilities():
+    return {"email_delivery": bool(settings.enable_email_delivery and settings.smtp_host), "vk_id": False}
 
 
 class ContentIn(BaseModel):
