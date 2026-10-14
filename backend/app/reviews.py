@@ -1,4 +1,4 @@
-"""Expert assignments, independent reviews, and controlled publication."""
+"""оценки экспертов"""
 
 from __future__ import annotations
 
@@ -191,7 +191,7 @@ def auto_assign_experts(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("admin")),
 ):
-    # Одинаковый порядок блокировок предотвращает взаимное ожидание.
+    # порядок блокировок
     stmt = select(Project).where(
         Project.status.in_(["admitted", "reviewing"]), Project.reviews_released.is_(False)
     )
@@ -292,7 +292,7 @@ def submit_review(
         raise HTTPException(409, "Приём рецензий для этого проекта завершён")
     if db.scalar(select(Review.id).where(Review.assignment_id == assignment.id)):
         raise HTTPException(409, "Рецензия уже отправлена и не может быть изменена")
-    # Критерии не должны измениться посреди расчёта.
+    # фиксируем критерии
     criteria = list(
         db.scalars(
             select(Criterion)

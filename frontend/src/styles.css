@@ -46,7 +46,7 @@ img { max-width: 100%; }
 .skip-link:focus { top: 12px; }
 .shell { max-width: 1408px; margin: auto; padding: 0 48px 32px; }
 
-/* Общая шапка сохраняет место для кабинета и меню. */
+/* шапка сайта */
 .header { display: flex; align-items: center; gap: 28px; min-height: 104px; padding: 20px 0; margin-bottom: 28px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 185px; }
 .brand-mark { width: 38px; height: 38px; color: var(--blue); }
@@ -186,7 +186,7 @@ img { max-width: 100%; }
 .next-project h2 { font-size: 25px; font-weight: 600; letter-spacing: -.5px; margin-bottom: 8px; }
 .next-project p { font-size: 14px; color: var(--muted); }
 
-/* Поля, загрузки и сообщения используются всеми ролями. */
+/* общие поля */
 .project-form { display: flex; flex-direction: column; gap: 24px; }
 .form-section-title { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 600; }
 .step-square { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: var(--ice); color: var(--blue); font-size: 12px; font-variant-numeric: tabular-nums; }

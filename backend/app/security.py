@@ -1,4 +1,4 @@
-"""Password hashing and short-lived bearer tokens."""
+"""пароли токены"""
 
 from datetime import datetime, timedelta, timezone
 import hashlib

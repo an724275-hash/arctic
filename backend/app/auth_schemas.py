@@ -1,4 +1,4 @@
-"""Explicit API schemas: ORM password and token fields are never serialized."""
+"""поля аккаунта"""
 
 from datetime import date, datetime
 from typing import Literal
@@ -84,7 +84,7 @@ class UserOutput(BaseModel):
     grade: int | None = None
     region: str | None = None
     city: str | None = None
-    avatar_kind: str = 'bear'
+    avatar_kind: str = "bear"
     guardian_name: str | None = None
     guardian_email: str | None = None
     consent_at: datetime | None = None
@@ -95,7 +95,7 @@ class UserOutput(BaseModel):
 
 
 class ProfileInput(InputModel):
-    avatar_kind: Literal['bear','sakha'] | None = None
+    avatar_kind: Literal["bear", "sakha"] | None = None
     full_name: str | None = Field(default=None, min_length=2, max_length=200)
     school: str | None = Field(default=None, max_length=250)
     grade: int | None = Field(default=None, ge=1, le=11)

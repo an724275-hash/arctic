@@ -1,4 +1,4 @@
-"""Private certificate downloads and privacy-preserving public verification."""
+"""документы участников"""
 
 from __future__ import annotations
 
@@ -44,11 +44,7 @@ def certificate_response(certificate: Certificate) -> dict:
 
 
 def issue_quiz_certificate(db: Session, attempt: QuizAttempt) -> Certificate:
-    """Called while the participant row is locked; the attempt FK is also unique.
-
-    A submitted attempt earns participation; passing earns a success certificate.
-    These are distinct kinds and participation must never imply passing.
-    """
+    """выдача сертификата"""
     existing = db.scalar(select(Certificate).where(Certificate.attempt_id == attempt.id))
     if existing:
         return existing
@@ -100,7 +96,7 @@ def _certificate_font() -> str:
 
 
 def _wrapped_lines(text: str, font: str, size: float, max_width: float) -> list[str]:
-    """Wrap long names/titles, including a single unusually long word."""
+    """перенос текста"""
     lines: list[str] = []
     current = ""
     for word in text.split():

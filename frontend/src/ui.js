@@ -27,8 +27,8 @@ function button(label, action, variant = '', symbol = 'arrow', attrs = '') {
 const go = (name) => `data-route="${name}"`;
 const act = (name) => `data-action="${name}"`;
 
-function heading(title, subtitle, symbol = 'compass') {
-  return `<div class="page-heading"><div><h1 tabindex="-1">${title}</h1><p>${subtitle}</p></div><div class="view-header-icon">${icon(symbol)}</div></div>`;
+function heading(title, subtitle) {
+  return `<div class="page-heading"><div><h1 tabindex="-1">${title}</h1><p>${subtitle}</p></div></div>`;
 }
 
 export { escapeHtml, icon, mark, button, heading, go, act };

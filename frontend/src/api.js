@@ -11,7 +11,7 @@ export class ApiError extends Error {
 export function getSession() { return session; }
 export function setSession(value) {
   session = value;
-  try { if (value) sessionStorage.setItem(sessionKey, JSON.stringify(value)); else sessionStorage.removeItem(sessionKey); } catch { /* В приватном режиме сессия живёт до перезагрузки. */ }
+  try { if (value) sessionStorage.setItem(sessionKey, JSON.stringify(value)); else sessionStorage.removeItem(sessionKey); } catch { /* без хранилища */ }
 }
 
 function errorMessage(data, status) {

@@ -77,7 +77,7 @@ function render(scroll = false) {
   profile.afterRender();
   polishPage(state);
   updateSeo();
-  // Открываем блоки при прокрутке; формы и вопросы остаются сразу видимыми.
+  // при прокрутке
   revealSections();
 }
 function updateSeo(){
@@ -166,7 +166,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   const stay = () => {
     if (historyMode !== 'none') return;
     const targetIndex = history.state?.arcticIndex;
-    // Restore the history position too, so cancelling Back does not discard an entry.
+    // возвращаем историю
     if (Number.isInteger(targetIndex) && targetIndex !== activeHistoryIndex) {
       restoringHistory = true;
       history.go(activeHistoryIndex - targetIndex);
@@ -250,7 +250,7 @@ function saveAnswers() {
   state.saving = true; state.answerError = '';
   updateAnswerFeedback();
   const attemptId = state.attempt.id;
-  // Отправляем снимки по очереди; быстрые изменения объединяются в следующий запрос.
+  // очередь ответов
   answerSave = answerSave.catch(() => {}).then(async () => {
     try {
       let revision;
@@ -463,7 +463,18 @@ document.addEventListener('click', async event => {
 });
 document.addEventListener('submit', async event => {
   const form = event.target;
-  if(form.matches('[data-mentor-join]')){event.preventDefault();await withForm(form,async()=>{const data=new FormData(form);await request('/teachers/join',{method:'POST',body:{token:state.mentorToken,replace:data.get('replace')==='on'}});mentor.clear();await navigate('dashboard',{force:true});toast('Наставник привязан.');});return;}
+  if (form.matches('[data-mentor-join]')) {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const replace = new FormData(form).get('replace') === 'on';
+    await withForm(form, async () => {
+      await request('/teachers/join', {method: 'POST', body: {token: state.mentorToken, replace}});
+      mentor.clear();
+      await navigate('dashboard', {force: true});
+      toast('Наставник привязан.');
+    });
+    return;
+  }
   if(form.dataset.consoleForm){event.preventDefault();try{await control.submit(form);}catch(error){toast(error.message);}return;}
   if(form.dataset.profileForm){event.preventDefault();await profile.submit(form);return;}
   if (['work-filter-form','ranking-filter-form','moderation-form','assignment-form','auto-assignment-form','expert-review-form','defense-form'].includes(form.id)) {

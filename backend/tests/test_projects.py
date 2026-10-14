@@ -6,7 +6,19 @@ import pytest
 from sqlalchemy import select
 
 from app.config import settings
-from app.models import Assignment, Criterion, ExpertNomination, Nomination, Notification, QuizAttempt, Stage, TeacherLink, Upload, User, utcnow
+from app.models import (
+    Assignment,
+    Criterion,
+    ExpertNomination,
+    Nomination,
+    Notification,
+    QuizAttempt,
+    Stage,
+    TeacherLink,
+    Upload,
+    User,
+    utcnow,
+)
 from app.security import create_access_token
 
 
@@ -25,16 +37,30 @@ def extra_user(db, role):
     db.add(user)
     db.commit()
     db.refresh(user)
-    if role=='expert':
-        db.add_all([ExpertNomination(expert_id=user.id,nomination_id=n) for n in db.scalars(select(Nomination.id))])
+    if role == "expert":
+        db.add_all(
+            [ExpertNomination(expert_id=user.id, nomination_id=n) for n in db.scalars(select(Nomination.id))]
+        )
         db.commit()
     return user, {"Authorization": f"Bearer {create_access_token(user)}"}
 
 
 def make_project(client, db, headers, title="Исследование арктического льда"):
-    user_id=client.get('/api/v1/users/me',headers=headers).json()['id']
-    if not db.scalar(select(QuizAttempt.id).where(QuizAttempt.user_id==user_id,QuizAttempt.passed.is_(True))):
-        db.add(QuizAttempt(user_id=user_id,expires_at=utcnow(),submitted_at=utcnow(),questions=[],config_snapshot={'pass_percent':60},score_percent=100,passed=True))
+    user_id = client.get("/api/v1/users/me", headers=headers).json()["id"]
+    if not db.scalar(
+        select(QuizAttempt.id).where(QuizAttempt.user_id == user_id, QuizAttempt.passed.is_(True))
+    ):
+        db.add(
+            QuizAttempt(
+                user_id=user_id,
+                expires_at=utcnow(),
+                submitted_at=utcnow(),
+                questions=[],
+                config_snapshot={"pass_percent": 60},
+                score_percent=100,
+                passed=True,
+            )
+        )
         db.commit()
     nomination = db.scalar(select(Nomination).where(Nomination.is_active.is_(True)))
     response = client.post(

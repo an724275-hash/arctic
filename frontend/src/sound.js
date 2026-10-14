@@ -1,5 +1,6 @@
-// Музыка запускается только после явного нажатия пользователя.
+// по нажатию
 let enabled = false;
+let changing = false;
 let context;
 const music = new Audio('/assets/northern-light.wav');
 music.loop = true;
@@ -10,14 +11,33 @@ export function soundButton(placement = 'header') {
   return `<button type="button" class="sound-toggle ${placement === 'hero' ? 'sound-hero' : ''} ${enabled ? 'sound-on' : ''}" data-action="sound-toggle" aria-pressed="${enabled}" aria-label="${enabled ? 'Выключить музыку' : 'Включить музыку'}" title="Спокойная музыка и звуки действий">${speaker}<span>${enabled ? 'Звук включён' : 'Включить звук'}</span></button>`;
 }
 export async function toggleSound() {
-  if (enabled) { music.pause(); enabled = false; }
-  else {
-    await music.play();
-    enabled = true;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) { context ||= new AudioContext(); await context.resume(); }
+  if (changing) return;
+  changing = true;
+  updateButtons();
+  try {
+    if (enabled) { music.pause(); enabled = false; }
+    else {
+      await music.play();
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) { context ||= new AudioContext(); await context.resume(); }
+      enabled = true;
+    }
+  } catch (error) {
+    music.pause(); enabled = false;
+    throw error;
+  } finally {
+    changing = false;
+    updateButtons();
   }
-  document.querySelectorAll('.sound-toggle').forEach(button => { button.outerHTML = soundButton(button.classList.contains('sound-hero') ? 'hero' : 'header'); });
+}
+function updateButtons() {
+  document.querySelectorAll('.sound-toggle').forEach(button => {
+    button.classList.toggle('sound-on', enabled);
+    button.setAttribute('aria-pressed', String(enabled));
+    button.setAttribute('aria-busy', String(changing));
+    button.setAttribute('aria-label', enabled ? 'Выключить музыку' : 'Включить музыку');
+    button.querySelector('span').textContent = enabled ? 'Звук включён' : 'Включить звук';
+  });
 }
 export function playCue(kind = 'complete') {
   if (!enabled || !context || context.state !== 'running') return;
@@ -38,5 +58,5 @@ export function playCue(kind = 'complete') {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) music.pause();
-  else if (enabled) void music.play().catch(() => { enabled = false; document.querySelectorAll('.sound-toggle').forEach(button => { button.outerHTML = soundButton(button.classList.contains('sound-hero') ? 'hero' : 'header'); }); });
+  else if (enabled) void music.play().catch(() => { enabled = false; updateButtons(); });
 });

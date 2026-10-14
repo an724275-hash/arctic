@@ -18,9 +18,11 @@ from pydantic import (
     model_validator,
 )
 from sqlalchemy import Numeric, cast, delete, func, or_, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth_schemas import InputModel, MessageOutput, UserOutput, age_on_today, validate_password
+from app.avatars import remove_avatar_file
 from app.certificates import certificate_response
 from app.common import audit
 from app.db import get_db
@@ -248,7 +250,7 @@ def _get(db, model, item_id, lock=False):
 
 
 def _lock_admins(db, actor):
-    # Нельзя одновременно отключить двух последних администраторов.
+    # последний администратор
     db.execute(select(func.pg_advisory_xact_lock(func.hashtext("arctic.admin_roles"))))
     admins = db.scalars(
         select(User)
@@ -310,9 +312,18 @@ def create_user(data: AdminUserInput, db: Db, actor: Admin):
         token_version=0,
     )
     db.add(user)
-    db.flush()
-    audit(db, actor.id, "admin.user_created", user.id, role=user.role)
-    db.commit()
+    try:
+        db.flush()
+        audit(db, actor.id, "admin.user_created", user.id, role=user.role)
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        if (
+            getattr(error.orig, "sqlstate", None) == "23505"
+            and getattr(getattr(error.orig, "diag", None), "constraint_name", None) == "ix_users_email"
+        ):
+            raise HTTPException(409, "Аккаунт с такой почтой уже существует") from None
+        raise
     return user
 
 
@@ -356,6 +367,9 @@ def delete_user(user_id: str, db: Db, actor: Admin):
     if user.role == "admin" and user.is_active and len(active_admins) <= 1:
         raise HTTPException(409, "Нельзя удалить последнего активного администратора")
     _revoke(db, user)
+    old_avatar = user.avatar_filename
+    user.avatar_filename = None
+    user.avatar_kind = "bear"
     user.email = f"deleted-{user.id}@example.invalid"
     user.full_name = "Удалённый пользователь"
     user.hashed_password = hash_password(secrets.token_urlsafe(48))
@@ -367,6 +381,7 @@ def delete_user(user_id: str, db: Db, actor: Admin):
         "school",
         "grade",
         "region",
+        "city",
         "guardian_name",
         "guardian_email",
         "consent_at",
@@ -375,6 +390,7 @@ def delete_user(user_id: str, db: Db, actor: Admin):
         setattr(user, field, None)
     audit(db, actor.id, "admin.user_anonymized", user.id)
     db.commit()
+    remove_avatar_file(old_avatar)
     return {"message": "Аккаунт обезличен и отключён. Конкурсные материалы сохранены"}
 
 

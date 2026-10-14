@@ -1,4 +1,4 @@
-"""Authentication always checks the live account and its revocation version."""
+"""проверка доступа"""
 
 from typing import Annotated
 

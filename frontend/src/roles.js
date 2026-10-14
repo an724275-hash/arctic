@@ -141,7 +141,7 @@ export function createWorkspace(state, ui) {
   async function reloadAfter(message) {
     const id = state.work.project.id;
     state.work.notice = message;
-    // Назначения и статусы перечитываются после подтверждения операции сервером.
+    // обновляем данные
     if (state.user.role === 'expert') await loadList();
     await loadDetail(id);
     ui.render(); updatePreview(); ui.toast(message);

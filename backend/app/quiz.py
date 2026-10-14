@@ -1,4 +1,4 @@
-"""Timed, server-scored quiz with immutable question and configuration snapshots."""
+"""попытки теста"""
 
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ def _aware(value: datetime) -> datetime:
 
 
 def _lock_participant(db: Session, user: User) -> None:
-    # Несколько вкладок не должны создавать лишние попытки.
+    # одна попытка
     db.execute(select(User.id).where(User.id == user.id).with_for_update()).scalar_one()
 
 
@@ -125,7 +125,7 @@ def _finish_attempt(db: Session, attempt: QuizAttempt, answers: dict, now: datet
 
 def _finish_if_expired(db: Session, attempt: QuizAttempt, now: datetime) -> None:
     if attempt.submitted_at is None and _aware(attempt.expires_at) <= now:
-        # После дедлайна учитываем только сохранённые ответы.
+        # время вышло
         _finish_attempt(db, attempt, attempt.answers or {}, now)
 
 
@@ -197,7 +197,7 @@ def start_attempt(db: Session = Depends(get_db), user: User = Depends(require_ro
             db.commit()
             return result
     config = _get_config(db)
-    # Начатую попытку можно закончить после закрытия этапа.
+    # начатая попытка
     require_stage_open(db, "testing")
     if not config.enabled:
         db.commit()  # Persist any expired attempts finalized above.
@@ -317,7 +317,7 @@ def save_answers(
     _finish_if_expired(db, attempt, now)
     if attempt.submitted_at is None:
         _validate_answers(attempt, payload.answers)
-        # Сохраняем весь набор, включая снятые ответы.
+        # снимок ответов
         attempt.answers = payload.answers
         db.flush()
     result = _attempt_response(db, attempt, now)
@@ -412,7 +412,7 @@ def delete_question(
     question = db.get(Question, str(question_id))
     if question is None:
         raise HTTPException(status_code=404, detail="Вопрос не найден")
-    # Удаление вопроса не меняет начатые попытки.
+    # снимок вопросов
     audit(db, _user.id, "question.deleted", question.id)
     db.delete(question)
     db.commit()

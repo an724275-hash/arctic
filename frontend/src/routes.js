@@ -7,7 +7,7 @@ const aliases = { route: 'participation', library: 'materials' };
 
 export function readRoute(location) {
   const hash = location.hash.slice(1);
-  // Old shared links remain usable after moving the public pages to their own URLs.
+  // старые ссылки
   if (hash && hash !== 'content') {
     const [name, ...rest] = hash.split('/');
     return [aliases[name] || name, ...rest].join('/');

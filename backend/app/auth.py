@@ -1,4 +1,4 @@
-"""Account lifecycle, rotating sessions, mentor consent, and private notifications."""
+"""учётные записи"""
 
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
@@ -154,7 +154,7 @@ def _queue_action(
     lifetime: timedelta,
     payload: dict | None = None,
 ) -> None:
-    # Новая ссылка отменяет предыдущую.
+    # новая ссылка
     db.execute(
         update(ActionToken)
         .where(
@@ -195,7 +195,7 @@ def _action(db: Session, raw_token: str, kind: str) -> ActionToken:
     action = db.scalar(query)
     if not action:
         raise HTTPException(status_code=400, detail="Ссылка недействительна или срок её действия истёк")
-    # Всегда блокируем пользователя раньше токена.
+    # порядок блокировок
     db.scalar(
         select(User)
         .where(User.id == action.user_id)
@@ -305,7 +305,7 @@ def oauth_token(db: Db, form: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 @router.post("/auth/refresh", response_model=SessionOutput)
 def refresh(data: RefreshInput, db: Db):
-    # Общий порядок блокировок защищает от гонки со сбросом пароля.
+    # порядок блокировок
     token = db.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_digest(data.refresh_token)))
     if not token:
         raise HTTPException(status_code=401, detail="Сессия недействительна")
@@ -508,7 +508,7 @@ def invite_teacher(data: EmailInput, db: Db, user: Participant):
         timedelta(days=7),
         {"participant_id": user.id, "teacher_email": recipient},
     )
-    # Старый наставник остаётся до согласия нового.
+    # ожидаем подтверждения
     db.commit()
     return {"message": "Приглашение наставнику поставлено в очередь. Связь появится после подтверждения"}
 

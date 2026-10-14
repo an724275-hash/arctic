@@ -1,4 +1,4 @@
-"""Project ownership, submission, and private, validated file storage."""
+"""работы участников"""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ from reportlab.pdfgen import canvas
 
 
 def draw_logo(pdf, x, y):
-    """The same mountain-and-compass mark used in the website header."""
+    """логотип сайта"""
     pdf.saveState()
     pdf.translate(x - 34, y + 34)
     pdf.scale(68 / 48, -68 / 48)

@@ -1,5 +1,5 @@
-/* Финальное оформление: снег, вода и спокойный синий акцент. */
-:root { --green: #345f73; --moss: #e9f0f3; --blue: #345f73; --blue-dark: #24495b; --ice: #e9f0f3; }
+/* цвета сайта */
+:root { --green: #345f73; --moss: #edf2ed; --blue: #345f73; --blue-dark: #24495b; --ice: #e9f0f3; --north: #c2d5df; --sage: #46685c; }
 body { background: #f6f9fb url('/assets/north-background.svg') center top / 1600px auto repeat-y; }
 .shell { position: relative; }
 .header { background: rgba(255,255,255,.94); border-radius: 0 0 18px 18px; }
@@ -50,8 +50,6 @@ body { background: #f6f9fb url('/assets/north-background.svg') center top / 1600
 @media(max-width:1100px) { .sound-toggle span { display: none; } }
 @media(max-width:700px) { .north-cover { padding-bottom: 255px; } .cover-copy { max-width: 100%; } .cover-bear { width: 285px; right: -12px; bottom: -15px; } .sound-toggle { padding: 8px; } .header { gap: 8px; } }
 
-/* Дополнительные оттенки действующего брендбука. */
-:root { --north: #c2d5df; --sage: #46685c; --moss: #edf2ed; }
 .cover-bear { right: 42px; bottom: 36px; }
 .sound-hero { position: absolute; z-index: 3; right: 36px; bottom: 28px; min-height: 48px; padding: 12px 18px; color: var(--ink); background: rgba(255,255,255,.95); box-shadow: 0 4px 20px #1d343d12; border-radius: 28px; }
 .sound-hero span { display: inline; }
@@ -80,7 +78,7 @@ body { background: #f6f9fb url('/assets/north-background.svg') center top / 1600
 @media(max-width:900px) { .cover-bear { right: 12px; bottom: 40px; } .sound-hero { right: 20px; } .account-hero { align-items: flex-start; flex-direction: column; } }
 @media(max-width:700px) { .cover-bear { right: 8px; bottom: 34px; } .sound-hero { right: 16px; bottom: 16px; min-height: 44px; padding: 10px 14px; font-size: 12px; } .account-hero { padding: 24px 20px; border-radius: 24px; gap: 20px; } .account-avatar { width: 48px; height: 48px; border-radius: 16px; font-size: 18px; } .account-identity { gap: 12px; } .activity-island { min-height: 42px; padding: 10px 16px; } }
 
-/* Ноги маскота опираются на льдину внутри его прозрачного кадра. */
+/* опора мишки */
 .cover-bear::before { content: ''; position: absolute; left: -8%; right: -20%; top: 86%; height: 65%; background: url('/assets/snow-cliff.svg') center top / 100% 100% no-repeat; }
 .cover-bear::after { content: ''; position: absolute; left: 29%; right: 27%; bottom: 9.5%; height: 3%; border-radius: 50%; background: #345f7333; filter: blur(4px); }
 .cover-bear img { position: relative; z-index: 1; }
