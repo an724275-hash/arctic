@@ -12,7 +12,17 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.dependencies import get_current_user, require_roles
-from app.models import Assignment, AuditLog, Criterion, Notification, Project, Review, User, utcnow
+from app.models import (
+    Assignment,
+    AuditLog,
+    Criterion,
+    ExpertNomination,
+    Notification,
+    Project,
+    Review,
+    User,
+    utcnow,
+)
 from app.projects import ProjectOut, project_for_access
 
 router = APIRouter(tags=["reviews"])
@@ -150,6 +160,13 @@ def assign_experts(
     )
     if len(experts) != len(payload.expert_ids):
         raise HTTPException(422, "Назначать можно только действующих экспертов")
+    allowed = set(
+        db.scalars(
+            select(ExpertNomination.expert_id).where(ExpertNomination.nomination_id == project.nomination_id)
+        )
+    )
+    if any(expert.id not in allowed for expert in experts):
+        raise HTTPException(422, "Эксперт должен работать по направлению выбранного проекта")
     existing_ids = set(db.scalars(select(Assignment.expert_id).where(Assignment.project_id == project.id)))
     created = [add_assignment(db, project, expert) for expert in experts if expert.id not in existing_ids]
     db.add(
@@ -199,10 +216,19 @@ def auto_assign_experts(
             db.scalars(select(Assignment.expert_id).where(Assignment.project_id == project.id))
         )
         needed = max(0, payload.count - len(assigned_ids))
+        allowed = set(
+            db.scalars(
+                select(ExpertNomination.expert_id).where(
+                    ExpertNomination.nomination_id == project.nomination_id
+                )
+            )
+        )
         eligible = sorted(
-            (expert for expert in experts if expert.id not in assigned_ids),
+            (expert for expert in experts if expert.id not in assigned_ids and expert.id in allowed),
             key=lambda e: (loads.get(e.id, 0), e.id),
         )
+        if len(eligible) < needed:
+            raise HTTPException(422, "Недостаточно экспертов по направлению проекта")
         for expert in eligible[:needed]:
             created.append(add_assignment(db, project, expert))
             loads[expert.id] = loads.get(expert.id, 0) + 1

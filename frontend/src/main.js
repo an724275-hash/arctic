@@ -16,8 +16,9 @@ import {updateCities,selectCity,cityKeys} from './geography.js';
 import {awardsView,newsView} from './product-views.js';
 import {preparationView} from './preparation.js';
 import {polishPage,installNavigationPolish} from './ux.js';
+import {mentorView,createMentor} from './mentor.js';
 
-const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView };
+const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
 
 const app = document.querySelector('#app');
 const dialog = document.querySelector('#dialog');
@@ -45,6 +46,7 @@ let restoringHistory = false;
 const workspace = createWorkspace(state, { render, navigate, toast, modal });
 const control = createConsole(state,{render,toast,reloadPublic:loadPublic});
 const profile = createProfile(state,{render,toast});
+const mentor=createMentor(state);
 
 function routeHash(route, id) {
   if (['project', 'submitted'].includes(route)) id ||= state.project?.id;
@@ -81,7 +83,7 @@ function render(scroll = false) {
 function updateSeo(){
   const meta=(name,value,property=false)=>{let node=document.head.querySelector(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=document.createElement('meta');node.setAttribute(property?'property':'name',name);document.head.append(node);}node.content=value;};
   const description=state.route==='article'&&state.article?(state.article.intro||state.article.excerpt||state.article.body||'').slice(0,280):'Конкурс «Удивительная и неизведанная Арктика»: образовательные материалы, тестирование, исследовательские проекты и сертификаты.';
-  meta('description',description);meta('robots',protectedRoutes.has(state.route)||['login','register','forgot-password','reset-password','verify-email','not-found'].includes(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
+  meta('description',description);meta('robots',protectedRoutes.has(state.route)||['login','register','forgot-password','reset-password','verify-email','teacher-invite','not-found'].includes(state.route)?'noindex, noarchive':'index, follow');meta('og:title',document.title,true);meta('og:description',description,true);
   let canonical=document.head.querySelector('link[rel=canonical]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.append(canonical);}canonical.href=location.origin+location.pathname;
   const old=document.querySelector('#article-schema');old?.remove();
   if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.webp')});document.head.append(script);}
@@ -139,6 +141,7 @@ async function loadDashboard() {
   ]);
   state.projects = projects; state.attempts = attempts; state.certificates = certificates; state.defenses = defenses;
   state.unreadNotifications=notifications.length;
+  if(participant)state.mentorConnection=await request('/teachers/link');
   await profile.photo();
 }
 function setAttempt(attempt, resetQuestion = false) {
@@ -198,6 +201,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
       if (workspace.isRoute(next)) await workspace.load(next, id);
       if(consoleRoutes.has(next)) await control.load(next);
       if(next==='profile') await profile.load();
+      if(next==='teacher-invite')await mentor.load();
       if(next==='awards') await loadDashboard();
       if (next === 'dashboard') await loadDashboard();
       if (next === 'quiz' || next === 'quiz-confirm' || next === 'result') {
@@ -211,6 +215,10 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
         state.route = state.attempt.status !== 'active' ? 'result' : next === 'result' ? 'quiz' : next;
       }
       if (next === 'project' || next === 'submitted') {
+        if(next==='project'&&!id&&!state.project?.id){
+          state.attempts=await request('/quiz/attempts');
+          if(!state.attempts.some(a=>a.passed===true)){toast('Второй этап откроется после проходного результата теста.');await navigate('dashboard',{force:true});return;}
+        }
         if (id || state.project?.id) state.project = await request(`/projects/${id || state.project.id}`);
         else if (next === 'submitted') { await navigate('dashboard', { force: true }); return; }
         if (state.project?.id) {
@@ -360,7 +368,7 @@ async function authenticate(form, registration) {
     const session = await request(`/auth/${registration ? 'register' : 'login'}`, { method: 'POST', body: payload, auth: false });
     setSession(session); state.user = session.user;
     await loadPublic();
-    await navigate(registration ? 'dashboard' : pendingRoute, { force: true });
+    await navigate(state.mentorToken?'teacher-invite':registration ? 'dashboard' : pendingRoute, { force: true });
     pendingRoute = 'dashboard';
     if (registration) {
       playCue('welcome');
@@ -374,6 +382,15 @@ function reviewAnswers() {
 }
 async function action(name) {
   switch (name) {
+    case 'create-mentor-link': {
+      const reply=await request('/teachers/invite-link',{method:'POST'});
+      modal('Личная ссылка ученику',`<p>Одноразовая ссылка действует три дня. Передай её одному ученику. Он войдёт или зарегистрируется и сам подтвердит привязку.</p><div class="form-field"><label for="mentor-share">Ссылка приглашения</label><input id="mentor-share" readonly value="${e(reply.url)}"></div><button type="button" class="button secondary" data-action="copy-mentor-link">Скопировать ссылку ${icon('file')}</button>`);break;
+    }
+    case 'copy-mentor-link': {
+      const input=document.querySelector('#mentor-share');
+      try{await navigator.clipboard.writeText(input.value);toast('Ссылка скопирована.');}catch{input.select();toast('Выделил ссылку — скопируй её вручную.');}break;
+    }
+    case 'cancel-mentor':mentor.clear();return navigate('dashboard');
     case 'start': return startQuiz();
     case 'next':
       if (state.answerError) return;
@@ -383,7 +400,10 @@ async function action(name) {
     case 'retry-answer': return saveAnswers();
     case 'finish': return finishQuiz();
     case 'review': reviewAnswers(); break;
-    case 'new-project': state.project = null; state.projectReviews = []; state.file = null; state.materials = {}; draftDirty = false; return navigate('project', { reload: false });
+    case 'new-project':
+      state.attempts=await request('/quiz/attempts');
+      if(!state.attempts.some(a=>a.passed===true)){toast('Сначала пройди тест с проходным результатом.');return navigate('dashboard');}
+      state.project = null; state.projectReviews = []; state.file = null; state.materials = {}; draftDirty = false; return navigate('project', { reload: false });
     case 'refresh-project': return navigate('project');
     case 'reopen': await request(`/projects/${state.project.id}/reopen`, { method: 'POST' }); return navigate('project');
     case 'retry': await loadPublic(); return navigate(state.route);
@@ -443,6 +463,7 @@ document.addEventListener('click', async event => {
 });
 document.addEventListener('submit', async event => {
   const form = event.target;
+  if(form.matches('[data-mentor-join]')){event.preventDefault();await withForm(form,async()=>{const data=new FormData(form);await request('/teachers/join',{method:'POST',body:{token:state.mentorToken,replace:data.get('replace')==='on'}});mentor.clear();await navigate('dashboard',{force:true});toast('Наставник привязан.');});return;}
   if(form.dataset.consoleForm){event.preventDefault();try{await control.submit(form);}catch(error){toast(error.message);}return;}
   if(form.dataset.profileForm){event.preventDefault();await profile.submit(form);return;}
   if (['work-filter-form','ranking-filter-form','moderation-form','assignment-form','auto-assignment-form','expert-review-form','defense-form'].includes(form.id)) {

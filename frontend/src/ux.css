@@ -1,4 +1,11 @@
 .form-field[hidden] { display:none!important; }
+.account-creation { margin-top:28px; }
+.account-creation>summary { min-height:44px; cursor:pointer; font-weight:600; }
+.account-creation[open]>.project-form { margin-top:20px; }
+.direction-options { border:0; padding:0; display:grid; gap:12px; }
+.direction-options legend { font-weight:600; margin-bottom:16px; }
+.participant-journey ol { grid-template-columns:repeat(2,minmax(0,1fr)); }
+@media(max-width:500px) { .participant-journey ol { grid-template-columns:1fr; } }
 .password-control { position:relative; width:100%; }
 .password-control input { width:100%; padding-right:104px; }
 .password-toggle { position:absolute; right:4px; top:4px; bottom:4px; min-width:88px; min-height:44px; border:0; border-radius:10px; color:var(--blue-dark); background:var(--ice); font-size:13px; cursor:pointer; }

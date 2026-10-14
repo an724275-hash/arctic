@@ -45,7 +45,7 @@ class User(IdMixin, Base):
     grade: Mapped[int | None] = mapped_column(Integer)
     region: Mapped[str | None] = mapped_column(String(150), index=True)
     city: Mapped[str | None] = mapped_column(String(150))
-    avatar_kind: Mapped[str] = mapped_column(String(20), default='bear', server_default='bear')
+    avatar_kind: Mapped[str] = mapped_column(String(20), default="bear", server_default="bear")
     avatar_filename: Mapped[str | None] = mapped_column(String(100))
     guardian_name: Mapped[str | None] = mapped_column(String(200))
     guardian_email: Mapped[str | None] = mapped_column(String(320))
@@ -125,6 +125,14 @@ class Nomination(IdMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
+class ExpertNomination(Base):
+    __tablename__ = "expert_nominations"
+    expert_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    nomination_id: Mapped[str] = mapped_column(
+        ForeignKey("nominations.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
 class Project(IdMixin, Base):
     __tablename__ = "projects"
     __table_args__ = (
@@ -196,6 +204,7 @@ class Certificate(IdMixin, Base):
     title: Mapped[str] = mapped_column(String(300))
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     public_token: Mapped[str] = mapped_column(String(100), unique=True)
+    mentor_name: Mapped[str | None] = mapped_column(String(200))
 
 
 class Defense(IdMixin, Base):

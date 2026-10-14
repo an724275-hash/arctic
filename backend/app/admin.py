@@ -1,6 +1,7 @@
 import csv
 import io
 import secrets
+import json
 from datetime import datetime, timedelta
 from typing import Annotated, Literal
 
@@ -16,7 +17,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from sqlalchemy import Numeric, cast, func, or_, select, update
+from sqlalchemy import Numeric, cast, delete, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.auth_schemas import InputModel, MessageOutput, UserOutput, age_on_today, validate_password
@@ -31,6 +32,7 @@ from app.models import (
     ContactMessage,
     Criterion,
     Defense,
+    ExpertNomination,
     Nomination,
     Notification,
     Outbox,
@@ -65,6 +67,36 @@ class AdminUserInput(InputModel):
 class AdminUserUpdate(InputModel):
     role: Role | None = None
     is_active: bool | None = None
+
+
+class ExpertDirectionsInput(InputModel):
+    nomination_ids: list[str] = Field(default_factory=list, max_length=100)
+
+
+@router.get("/admin/expert-directions")
+def expert_directions(db: Db, actor: Admin):
+    return [
+        {"expert_id": row.expert_id, "nomination_id": row.nomination_id}
+        for row in db.scalars(select(ExpertNomination))
+    ]
+
+
+@router.put("/admin/experts/{expert_id}/directions")
+def save_expert_directions(expert_id: str, data: ExpertDirectionsInput, db: Db, actor: Admin):
+    expert = db.get(User, expert_id)
+    if not expert or expert.role != "expert":
+        raise HTTPException(404, "Эксперт не найден")
+    ids = set(data.nomination_ids)
+    found = set(
+        db.scalars(select(Nomination.id).where(Nomination.id.in_(ids), Nomination.is_active.is_(True)))
+    )
+    if ids != found:
+        raise HTTPException(422, "Выберите действующие направления конкурса")
+    db.execute(delete(ExpertNomination).where(ExpertNomination.expert_id == expert_id))
+    db.add_all([ExpertNomination(expert_id=expert_id, nomination_id=item) for item in sorted(ids)])
+    audit(db, actor.id, "expert.directions_changed", expert_id)
+    db.commit()
+    return {"expert_id": expert_id, "nomination_ids": sorted(ids)}
 
 
 class NominationInput(InputModel):
@@ -616,6 +648,51 @@ def export_users(db: Db, actor: Admin):
     )
 
 
+@router.get("/admin/export/analytics.json")
+def export_analytics(db: Db, actor: Admin):
+    report = {"generated_at": utcnow().isoformat(), "statistics": stats(db, actor)}
+    audit(db, actor.id, "admin.analytics_exported")
+    db.commit()
+    return Response(
+        content=json.dumps(report, ensure_ascii=False),
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="analytics.json"'},
+    )
+
+
+@router.get("/admin/export/reviews.csv")
+def export_reviews(db: Db, actor: Admin):
+    rows = db.execute(
+        select(Review, Project.title, User.full_name)
+        .join(Project, Project.id == Review.project_id)
+        .join(User, User.id == Review.expert_id)
+        .order_by(Review.submitted_at)
+    ).all()
+    audit(db, actor.id, "admin.reviews_exported", count=len(rows))
+    db.commit()
+    return _csv_response(
+        "reviews.csv",
+        ["Проект", "Эксперт", "Итоговая оценка", "Оценки по критериям", "Комментарий", "Дата"],
+        [
+            (
+                title,
+                name,
+                review.weighted_score,
+                json.dumps(
+                    {
+                        criterion["name"]: review.scores.get(criterion["id"])
+                        for criterion in review.criteria_snapshot
+                    },
+                    ensure_ascii=False,
+                ),
+                review.comment,
+                review.submitted_at.isoformat(),
+            )
+            for review, title, name in rows
+        ],
+    )
+
+
 @router.get("/admin/export/projects.csv")
 def export_projects(db: Db, actor: Admin):
     rows = db.execute(
@@ -718,6 +795,13 @@ def issue_certificate(data: CertificateInput, db: Db, actor: Admin):
         title=data.title,
         number=f"ARC-{utcnow().year}-{secrets.token_hex(6).upper()}",
         public_token=secrets.token_urlsafe(32),
+        mentor_name=db.scalar(
+            select(User.full_name)
+            .join(TeacherLink, TeacherLink.teacher_id == User.id)
+            .where(TeacherLink.participant_id == user.id, TeacherLink.status == "accepted")
+        )
+        if data.kind == "diploma"
+        else None,
     )
     db.add(certificate)
     db.flush()

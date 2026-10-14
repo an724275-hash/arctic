@@ -85,7 +85,7 @@ export function reviewProject(s) {
     ${defensesPanel(w.defenses, p.id)}${admin && ['admitted','reviewing','evaluated'].includes(p.status) ? defenseForm(p) : ''}`.trim();
   return `<a href="#workspace" data-route="workspace" class="backlink">${icon('back')}${expert ? 'Мои назначения' : 'Работы конкурса'}</a>
     ${heading(e(p.title), `${e(p.participant_name)} · ${e(p.nomination_title || nomination(s,p.nomination_id))}`, 'folder')}
-    <div class="role-project-meta">${status(p)}${p.reviews_released ? '<span>Результаты опубликованы</span>' : ''}<span>Подано ${date(p.submitted_at)}</span><button class="link-button" data-role-action="refresh">Обновить статус</button></div>
+    <div class="role-project-meta">${status(p)}${p.reviews_released ? '<span>Результаты опубликованы</span>' : ''}<span>Подано ${date(p.submitted_at)}</span><span>Наставник: ${e(p.mentor_name||'не назначен')}</span><button class="link-button" data-role-action="refresh">Обновить статус</button></div>
     ${w.notice ? `<div class="notice" role="status"><p>${e(w.notice)}</p></div>` : ''}
     <div class="workspace-grid role-project-grid${sidebar ? '' : ' role-project-wide'}"><div class="stack role-document">${materialPanel(p)}${canReview ? reviewForm(s) : ''}${feedback}</div>${sidebar ? `<aside class="stack">${sidebar}</aside>` : ''}</div>`;
 }

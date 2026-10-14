@@ -39,6 +39,78 @@ Db = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 Participant = Annotated[User, Depends(require_roles("participant"))]
 Teacher = Annotated[User, Depends(require_roles("teacher"))]
+
+
+class JoinMentorInput(TokenInput):
+    replace: bool = False
+
+
+@router.post("/teachers/invite-link", status_code=201)
+def create_mentor_link(db: Db, user: Teacher):
+    token = new_secret()
+    expires = utcnow() + timedelta(days=3)
+    db.add(
+        ActionToken(user_id=user.id, kind="mentor_link", token_hash=token_digest(token), expires_at=expires)
+    )
+    _audit(db, "teacher.link_created", user)
+    db.commit()
+    return {
+        "url": settings.frontend_url.rstrip("/") + "/teacher-invite?" + urlencode({"token": token}),
+        "expires_at": expires,
+        "single_use": True,
+    }
+
+
+@router.get("/teachers/invite-link/{token}")
+def mentor_link_info(token: str, db: Db):
+    if len(token) > 128:
+        raise HTTPException(400, "Ссылка недействительна")
+    action = db.scalar(
+        select(ActionToken).where(
+            ActionToken.token_hash == token_digest(token),
+            ActionToken.kind == "mentor_link",
+            ActionToken.used_at.is_(None),
+        )
+    )
+    teacher = db.get(User, action.user_id) if action else None
+    if (
+        not action
+        or _aware(action.expires_at) <= utcnow()
+        or not teacher
+        or teacher.role != "teacher"
+        or not teacher.is_active
+    ):
+        raise HTTPException(400, "Ссылка недействительна или срок её действия истёк")
+    return {"teacher_name": teacher.full_name, "school": teacher.school, "expires_at": action.expires_at}
+
+
+@router.post("/teachers/join", response_model=MessageOutput)
+def join_mentor(data: JoinMentorInput, db: Db, user: Participant):
+    action = _action(db, data.token, "mentor_link")
+    teacher = db.get(User, action.user_id)
+    if not teacher or teacher.role != "teacher" or not teacher.is_active:
+        raise HTTPException(400, "Наставник недоступен")
+    db.scalar(select(User).where(User.id == user.id).with_for_update())
+    link = db.scalar(select(TeacherLink).where(TeacherLink.participant_id == user.id).with_for_update())
+    if link and link.teacher_id != teacher.id and not data.replace:
+        raise HTTPException(409, "У вас уже есть наставник. Подтвердите замену отдельно")
+    if link:
+        link.teacher_id = teacher.id
+        link.status = "accepted"
+        link.created_at = utcnow()
+    else:
+        db.add(TeacherLink(participant_id=user.id, teacher_id=teacher.id, status="accepted"))
+    action.used_at = utcnow()
+    db.add(
+        Notification(
+            user_id=teacher.id, title="Новый ученик", body=f"{user.full_name} подтвердил связь с вами."
+        )
+    )
+    _audit(db, "teacher.link_joined", user, teacher.id)
+    db.commit()
+    return {"message": "Наставник привязан. Он видит ваши работы и опубликованные результаты."}
+
+
 _DUMMY_HASH = hash_password("unavailable-account-" + new_secret())
 
 
@@ -358,8 +430,8 @@ def update_profile(data: ProfileInput, db: Db, user: CurrentUser):
     guardian_consent = changes.pop("guardian_consent", False)
     if changes.get("full_name", user.full_name) is None:
         raise HTTPException(status_code=422, detail="Имя не может быть пустым")
-    if 'avatar_kind' in changes and changes['avatar_kind'] is None:
-        raise HTTPException(status_code=422,detail='Выберите один из аватаров')
+    if "avatar_kind" in changes and changes["avatar_kind"] is None:
+        raise HTTPException(status_code=422, detail="Выберите один из аватаров")
     if user.birth_date and age_on_today(user.birth_date) < 18:
         if not changes.get("guardian_name", user.guardian_name) or not changes.get(
             "guardian_email", user.guardian_email

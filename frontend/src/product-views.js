@@ -1,9 +1,9 @@
 import {escapeHtml as e,heading,icon,button} from './ui.js';
 
 export function journey(s){
-  const testDone=s.attempts.some(a=>a.status!=='active'),sent=s.projects.some(p=>p.status!=='draft'),rated=s.projects.some(p=>p.reviews_released);
-  const steps=[['Регистрация',true,'Аккаунт создан','profile'],['Знакомство и тест',testDone,testDone?'Результат сохранён':'Пройди образовательный этап','dashboard'],['Подача проекта',sent,sent?'Работа отправлена':'Подготовь и отправь исследование','project'],['Экспертиза и результат',rated,rated?'Результаты опубликованы':'Следи за статусом работы','dashboard']];
-  return `<section class="participant-journey"><div><h2>Твой путь в конкурсе</h2><p>${steps.filter(step=>step[1]).length} из 4 шагов пройдено. Статусы отражают действия в аккаунте.</p></div><ol>${steps.map(([title,done,description,route],i)=>`<li class="${done?'done':''}"><span>${done?icon('check'):String(i+1).padStart(2,'0')}</span><a href="/#${route}" data-route="${route}"><strong>${title}</strong><small>${description}</small></a></li>`).join('')}</ol></section>`;
+  const passed=s.attempts.some(a=>a.passed===true),sent=s.projects.some(p=>p.status!=='draft'),rated=s.projects.some(p=>p.reviews_released);
+  const steps=[['Первый этап: тест',passed,passed?'Проходной результат достигнут':`Набери минимум ${s.config?.pass_percent??60}%. Обучение необязательно.`,'dashboard'],['Второй этап: работа',rated,rated?'Оценки опубликованы':sent?'Материалы отправлены, следи за проверкой':passed?'Подготовь исследование и обсуди его с наставником':'Откроется после проходного результата теста',passed?'project':'dashboard']];
+  return `<section class="participant-journey"><div><h2>Два этапа конкурса</h2><p>Сначала тестирование, затем работа и экспертиза по выбранному направлению.</p></div><ol>${steps.map(([title,done,description,route],i)=>`<li class="${done?'done':''}"><span>${done?icon('check'):String(i+1).padStart(2,'0')}</span><a href="/#${route}" data-route="${route}"><strong>${title}</strong><small>${description}</small></a></li>`).join('')}</ol></section>`;
 }
 export function awardsView(s){
   const certs=s.certificates;

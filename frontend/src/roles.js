@@ -53,7 +53,9 @@ export function createWorkspace(state, ui) {
       experts.push(...page.items); total = page.total;
       if (!page.items.length) break;
     } while (experts.length < total);
-    state.work.experts = experts;
+    const directions=await request('/admin/expert-directions');
+    const eligible=new Set(directions.filter(d=>d.nomination_id===state.work.project?.nomination_id).map(d=>d.expert_id));
+    state.work.experts = experts.filter(expert=>eligible.has(expert.id));
   }
 
   async function ownAssignment(projectId) {

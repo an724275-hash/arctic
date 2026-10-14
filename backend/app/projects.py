@@ -30,6 +30,7 @@ from app.models import (
     Nomination,
     Notification,
     Project,
+    QuizAttempt,
     TeacherLink,
     Upload,
     User,
@@ -37,6 +38,20 @@ from app.models import (
 )
 
 router = APIRouter(tags=["projects"])
+
+
+def require_qualified_participant(db: Session, user_id: str):
+    passed = db.scalar(
+        select(QuizAttempt.id)
+        .where(
+            QuizAttempt.user_id == user_id,
+            QuizAttempt.passed.is_(True),
+            QuizAttempt.submitted_at.is_not(None),
+        )
+        .limit(1)
+    )
+    if passed is None:
+        raise HTTPException(409, "Второй этап доступен после прохождения теста с проходным результатом")
 
 
 class ProjectWrite(BaseModel):
@@ -122,6 +137,7 @@ class ProjectDetail(ProjectOut):
     files: list[FileOut]
     nomination_title: str | None
     participant_name: str
+    mentor_name: str | None = None
 
 
 class ModerationWrite(BaseModel):
@@ -203,6 +219,7 @@ def create_project(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("participant")),
 ):
+    require_qualified_participant(db, user.id)
     active_nomination(db, payload.nomination_id)
     project = Project(user_id=user.id, **payload.model_dump())
     db.add(project)
@@ -216,6 +233,11 @@ def get_project(project_id: str, db: Session = Depends(get_db), user: User = Dep
     project = project_for_access(db, project_id, user)
     participant = db.get(User, project.user_id)
     nomination = db.get(Nomination, project.nomination_id)
+    mentor = db.scalar(
+        select(User.full_name)
+        .join(TeacherLink, TeacherLink.teacher_id == User.id)
+        .where(TeacherLink.participant_id == project.user_id, TeacherLink.status == "accepted")
+    )
     return ProjectDetail(
         **ProjectOut.model_validate(project).model_dump(),
         files=[
@@ -226,6 +248,7 @@ def get_project(project_id: str, db: Session = Depends(get_db), user: User = Dep
         ],
         nomination_title=nomination.title if nomination else None,
         participant_name=participant.full_name if participant else "Участник",
+        mentor_name=mentor,
     )
 
 
@@ -254,6 +277,7 @@ def patch_project(
 @router.post("/projects/{project_id}/submit", response_model=ProjectOut)
 def submit_project(project_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     project = editable_project(db, project_id, user)
+    require_qualified_participant(db, project.user_id)
     require_stage_open(db, "projects")
     active_nomination(db, project.nomination_id)
     if not project.title.strip() or len(project.abstract.strip()) < 10:

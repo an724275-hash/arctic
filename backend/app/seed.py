@@ -6,16 +6,27 @@ from datetime import date
 from sqlalchemy import select
 
 from app.db import SessionLocal
-from app.models import Content, Criterion, Nomination, Question, QuizConfig, Stage, User, utcnow
+from app.models import (
+    Content,
+    Criterion,
+    ExpertNomination,
+    Nomination,
+    Question,
+    QuizConfig,
+    Stage,
+    User,
+    utcnow,
+)
 from app.security import hash_password
 
 
 import json
 from pathlib import Path
 
-QUIZ_CATALOG = json.loads(Path(__file__).with_name('quiz_catalog.json').read_text(encoding='utf-8'))
-QUESTIONS = [(q['text'], [o['text'] for o in q['options']], int(q['correct_option_ids'][0])) for q in QUIZ_CATALOG]
-
+QUIZ_CATALOG = json.loads(Path(__file__).with_name("quiz_catalog.json").read_text(encoding="utf-8"))
+QUESTIONS = [
+    (q["text"], [o["text"] for o in q["options"]], int(q["correct_option_ids"][0])) for q in QUIZ_CATALOG
+]
 
 
 def seed_catalog(db):
@@ -147,6 +158,12 @@ def seed_demo(db, password: str):
             )
             db.add(user)
         users[key] = user
+    db.flush()
+    for user in users.values():
+        if user.role == "expert":
+            for nomination_id in db.scalars(select(Nomination.id).where(Nomination.is_active.is_(True))):
+                if not db.get(ExpertNomination, (user.id, nomination_id)):
+                    db.add(ExpertNomination(expert_id=user.id, nomination_id=nomination_id))
     db.flush()
     return users
 

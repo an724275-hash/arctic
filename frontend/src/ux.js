@@ -1,9 +1,14 @@
 import './ux.css';
+import {accountForm} from './account-form.js';
 
 export function polishPage(state) {
   const main=document.querySelector('#content');
   main?.setAttribute('aria-busy',String(state.loading));
   main?.querySelector('h1')?.setAttribute('tabindex','-1');
+  if(state.route==='people'&&state.user?.role==='admin'){
+    const details=document.createElement('details');details.className='panel account-creation';details.innerHTML=accountForm();
+    main.querySelector('.console-content')?.append(details);
+  }
   if(state.route==='forgot-password'&&state.capabilities?.email_delivery===false){
     const note=document.createElement('p');note.className='notice';note.role='status';
     note.textContent='Автоматическая отправка писем пока недоступна. Для восстановления доступа обратитесь к организатору через раздел «Помощь».';
@@ -14,6 +19,25 @@ export function polishPage(state) {
     document.querySelectorAll('.navigation [data-route=awards]').forEach(link=>link.remove());
     const cabin=document.querySelector('.navigation [data-route=dashboard]');
     if(cabin){cabin.querySelector('strong').textContent='Кабинет партнёра';cabin.querySelector('small').textContent='Материалы и связь с организатором';}
+  }
+  if(state.user?.role==='participant'&&!state.attempts.some(a=>a.passed===true)&&state.attempt?.passed!==true){
+    document.querySelectorAll('[data-action=new-project]').forEach(button=>{button.disabled=true;button.title='Доступно после проходного результата теста';});
+    const section=document.querySelector('.project-register,.next-project');
+    if(section){const note=document.createElement('p');note.className='chart-caption';note.textContent=`Второй этап откроется после результата не ниже ${state.config?.pass_percent??60}% в тесте.`;section.querySelector('h2')?.after(note);}
+  }
+  if(state.user?.role!=='admin')document.querySelectorAll('[data-console^=export-]').forEach(button=>button.remove());
+  if(state.user?.role==='teacher'&&state.route==='workspace'){
+    const section=document.querySelector('.mentor-students');
+    if(section){
+      const bar=document.createElement('div');bar.className='console-page-actions';
+      const text=document.createElement('p');text.textContent='Пригласи ученика личной ссылкой. Он сам подтвердит привязку.';
+      const button=document.createElement('button');button.type='button';button.className='button secondary';button.dataset.action='create-mentor-link';button.textContent='Пригласить ученика';
+      bar.append(text,button);section.before(bar);
+    }
+  }
+  if(state.route==='dashboard'&&state.mentorConnection?.teacher){
+    const note=document.createElement('p');note.className='chart-caption';note.textContent='Наставник: '+state.mentorConnection.teacher.full_name;
+    document.querySelector('.cabinet-tools')?.after(note);
   }
   document.querySelectorAll('input[type=password]').forEach(input=>{
     if(input.closest('.password-control'))return;

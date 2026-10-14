@@ -1,11 +1,13 @@
 import {request,download} from './api.js';
 import {escapeHtml as e,icon,heading} from './ui.js';
 import './console.css';
+import {expertSettings} from './expert-settings.js';
+import {testingSettings} from './testing-settings.js';
 
-export const consoleRoutes = new Set(['overview','contest-settings','people','communications','notifications']);
+export const consoleRoutes = new Set(['overview','contest-settings','people','expert-directions','communications','notifications']);
 const labels = {participant:'Участник',teacher:'Наставник',expert:'Эксперт',admin:'Организатор',commission:'Комиссия',partner:'Партнёр'};
 const statuses = {draft:'Черновик',submitted:'Проверка',admitted:'Допущен',rejected:'Исправления',reviewing:'Экспертиза',evaluated:'Оценён'};
-const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['people','user','Участники'],['contest-settings','shield','Конкурс'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
+const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
 const link = (route,label,symbol='arrow')=>`<a href="/#${route}" data-route="${route}">${icon(symbol)}<span>${e(label)}</span></a>`;
 const date = value=>value ? new Date(value).toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'}) : 'Срок не указан';
 const num = value=>Number(value || 0).toLocaleString('ru-RU');
@@ -26,7 +28,7 @@ function signupChart(rows) {
 }
 function overview(s) {
   const d=s.console.stats;
-  return `${heading('Обзор конкурса','Данные участников и работ, включая демонстрационные аккаунты.')}<div class="console-page-actions"><span>Обновлено ${date(s.console.updated)}</span><button class="button secondary small" data-console="refresh">Обновить данные</button></div><dl class="console-metrics">${[['participants_total','Участников'],['projects_total','Проектов'],['reviews_total','Рецензий'],['certificates_total','Сертификатов']].map(([key,label])=>`<div><dt>${label}</dt><dd>${num(d[key])}</dd></div>`).join('')}</dl><div class="console-charts"><section class="panel"><h2>География участников</h2><p class="chart-caption">Регионы, указанные в профилях активных участников.</p>${bars(d.regions,d.participants_total)}</section><section class="panel"><h2>Работы по номинациям</h2><p class="chart-caption">Включает сохранённые черновики и отправленные работы.</p>${bars(d.nominations,d.projects_total)}</section><section class="panel"><h2>Регистрации за 30 дней</h2><p class="chart-caption">Все роли. Наведи на точку или открой таблицу.</p>${signupChart(d.signups_daily)}</section><section class="panel"><h2>Этапы проверки работ</h2>${bars(d.project_statuses,d.projects_total,statuses)}<div class="console-export"><button class="button secondary small" data-console="export-projects">Проекты CSV</button><button class="button secondary small" data-console="export-users">Участники CSV</button></div><p class="form-caption">Экспорт содержит персональные данные. Передавай его только уполномоченным организаторам.</p></section></div>`;
+  return `${heading('Обзор конкурса','Данные участников и работ, включая демонстрационные аккаунты.')}<div class="console-page-actions"><span>Обновлено ${date(s.console.updated)}</span><button class="button secondary small" data-console="refresh">Обновить данные</button></div><dl class="console-metrics">${[['participants_total','Участников'],['projects_total','Проектов'],['reviews_total','Рецензий'],['certificates_total','Сертификатов']].map(([key,label])=>`<div><dt>${label}</dt><dd>${num(d[key])}</dd></div>`).join('')}</dl><div class="console-charts"><section class="panel"><h2>География участников</h2><p class="chart-caption">Регионы, указанные в профилях активных участников.</p>${bars(d.regions,d.participants_total)}</section><section class="panel"><h2>Работы по номинациям</h2><p class="chart-caption">Включает сохранённые черновики и отправленные работы.</p>${bars(d.nominations,d.projects_total)}</section><section class="panel"><h2>Регистрации за 30 дней</h2><p class="chart-caption">Все роли. Наведи на точку или открой таблицу.</p>${signupChart(d.signups_daily)}</section><section class="panel"><h2>Этапы проверки работ</h2>${bars(d.project_statuses,d.projects_total,statuses)}<div class="console-export"><button class="button secondary small" data-console="export-projects">Проекты CSV</button><button class="button secondary small" data-console="export-users">Участники CSV</button><button class="button secondary small" data-console="export-reviews">Оценки экспертов CSV</button><button class="button secondary small" data-console="export-analytics">Вся аналитика JSON</button></div><p class="form-caption">Экспорт содержит персональные данные. Передавай его только уполномоченным организаторам.</p></section></div>`;
 }
 function field(name,label,value='',type='text',extra='') {
   return `<div class="form-field"><label for="setting-${name}">${label}</label><input id="setting-${name}" name="${name}" type="${type}" value="${e(value)}" ${extra}></div>`;
@@ -34,8 +36,9 @@ function field(name,label,value='',type='text',extra='') {
 const localDate=value=>value ? new Date(new Date(value).getTime()-new Date(value).getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
 function settings(s) {
   const c=s.console,tab=c.tab;
+  if(tab==='testing')return testingSettings(s);
   const rows=c[tab], item=rows.find(r=>r.id===c.selected) || {};
-  const tabs=[['stages','Этапы'],['nominations','Номинации'],['criteria','Критерии оценки']];
+  const tabs=[['stages','Этапы'],['testing','Тест'],['nominations','Номинации'],['criteria','Критерии оценки']];
   const form=tab==='stages' ? `${field('slug','Код этапа',item.slug||'','text',`required pattern="[a-z0-9_-]+" maxlength="80" ${item.id?'readonly':''}`)}${field('title','Название',item.title||'','text','required minlength="2" maxlength="200"')}<div class="field-grid">${field('starts_at','Начало',localDate(item.starts_at),'datetime-local')}${field('ends_at','Окончание',localDate(item.ends_at),'datetime-local')}</div>${field('position','Порядок',item.position||0,'number','required min="0" max="1000"')}<p class="form-caption">Время вводится в часовом поясе этого устройства. Пустые даты не ограничивают этап.</p>` : `${field(tab==='criteria'?'name':'title','Название',item.name||item.title||'','text','required minlength="2" maxlength="200"')}<div class="form-field"><label for="setting-description">Описание</label><textarea id="setting-description" name="description" maxlength="10000" rows="5">${e(item.description||'')}</textarea></div>${tab==='criteria'?`<div class="field-grid">${field('max_score','Максимальный балл',item.max_score??10,'number','required min="0.01" max="1000" step="any"')}${field('weight','Вес критерия',item.weight??1,'number','required min="0.01" max="1000" step="any"')}</div><p class="form-caption">Взвешенный итог учитывает долю баллов каждого критерия и его вес. Изменение критериев ограничено сервером, если они уже используются в рецензиях.</p>`:''}`;
   return `${heading('Настройки конкурса','Управляй этапами, направлениями работ и шкалой экспертизы. Изменения сохраняются на сервере и фиксируются в журнале действий.')}<div class="console-tabs" role="tablist" aria-label="Настройки">${tabs.map(([id,title])=>`<button role="tab" aria-selected="${tab===id}" data-console="tab" data-tab="${id}">${title}</button>`).join('')}</div><div class="settings-grid"><section class="panel settings-list"><div class="panel-heading"><h2>${tabs.find(([id])=>id===tab)[1]}</h2><button class="link-button" data-console="new">Добавить</button></div>${rows.length?rows.map(row=>`<button class="settings-row ${row.id===c.selected?'active':''}" data-console="select" data-id="${e(row.id)}"><span class="setting-dot">${icon(row.id===c.selected?'check':'compass')}</span><span><strong>${e(row.title||row.name)}</strong><small>${tab==='stages'?`${row.is_enabled?'Включён':'Отключён'} · ${date(row.starts_at)}`:row.is_active?'Доступен':'Неактивен'}</small></span>${icon('arrow')}</button>`).join(''):blank('Записей пока нет. Создай первую через форму справа.')}</section><section class="panel"><h2>${item.id?'Редактирование':'Новая запись'}</h2><form data-console-form="settings" class="project-form">${form}<label class="check-field"><input type="checkbox" name="enabled" ${tab==='stages'?item.is_enabled!==false?'checked':'':item.is_active!==false?'checked':''}><span>${tab==='stages'?'Этап включён':'Запись активна'}</span></label><div class="form-message" role="alert"></div><button class="button" type="submit">Сохранить изменения ${icon('check')}</button></form></section></div>`;
 }
@@ -51,7 +54,7 @@ function notifications(s) {
   const rows=s.console.notifications;
   return `${heading('Уведомления','Сообщения организатора и события участия. Здесь нет рекламной рассылки или сообщений из внешних сервисов.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
 }
-export const consoleViews={overview,'contest-settings':settings,people,communications,notifications};
+export const consoleViews={overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
 
 export function createConsole(s,ui) {
   s.console={stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
@@ -61,8 +64,9 @@ export function createConsole(s,ui) {
   async function load(route) {
     if(!rolesAllowed(route)) throw new Error('Этот раздел доступен только организатору.');
     if(route==='overview') {c.stats=await request('/admin/stats');c.updated=new Date().toISOString();}
-    if(route==='contest-settings') { [c.stages,c.nominations,c.criteria]=await Promise.all(['/admin/stages','/admin/nominations','/admin/criteria'].map(url=>request(url)));if(!c[c.tab].some(row=>row.id===c.selected)) c.selected=c[c.tab][0]?.id||''; }
+    if(route==='contest-settings') { [c.stages,c.nominations,c.criteria,c.quizConfig]=await Promise.all(['/admin/stages','/admin/nominations','/admin/criteria','/admin/quiz-config'].map(url=>request(url)));if(c.tab!=='testing'&&!c[c.tab].some(row=>row.id===c.selected)) c.selected=c[c.tab][0]?.id||''; }
     if(route==='people') c.people=await request(`/admin/users?limit=30&offset=${c.offset}&q=${encodeURIComponent(c.query)}${c.role?'&role='+c.role:''}`);
+    if(route==='expert-directions') [c.experts,c.nominations,c.directions]=await Promise.all(['/admin/users?role=expert&limit=200','/admin/nominations','/admin/expert-directions'].map(url=>request(url)));
     if(route==='communications') c.messages=await request('/admin/messages?limit=100');
     if(route==='notifications') c.notifications=await request('/notifications');
   }
@@ -75,13 +79,15 @@ export function createConsole(s,ui) {
     if(['tab','new','select'].includes(action)) {
       if(!canLeave()) return true;
       dirty=false;
-      if(action==='tab') {c.tab=target.dataset.tab;c.selected=c[c.tab][0]?.id||'';}
+      if(action==='tab') {c.tab=target.dataset.tab;c.selected=c.tab==='testing'?'':c[c.tab][0]?.id||'';}
       if(action==='select') c.selected=target.dataset.id;
       if(action==='new') c.selected='';
       ui.render();
     }
     if(action==='refresh') await refresh();
     if(action==='export-projects'||action==='export-users') await download(`/admin/export/${action==='export-projects'?'projects':'users'}.csv`,`${action==='export-projects'?'Проекты':'Участники'}.csv`);
+    if(action==='export-reviews')await download('/admin/export/reviews.csv','Оценки-экспертов.csv');
+    if(action==='export-analytics')await download('/admin/export/analytics.json','Аналитика.json');
     if(action.startsWith('people-')) {c.offset=Math.max(0,c.offset+(action==='people-next'?30:-30));await refresh();}
     if(action==='read-all') {await request('/notifications/read-all',{method:'POST'});await refresh();}
     if(action==='read') {await request(`/notifications/${target.dataset.id}/read`,{method:'PATCH'});await refresh();}
@@ -97,6 +103,18 @@ export function createConsole(s,ui) {
     const submit=form.querySelector('[type=submit]');submit.disabled=true;
     const message=form.querySelector('.form-message');message.textContent='Сохраняем…';
     try {
+      if(type==='create-account'){
+        await request('/admin/users',{method:'POST',body:{full_name:data.full_name,email:data.email,password:data.password,role:data.role}});
+        dirty=false;await refresh();ui.toast('Аккаунт создан. Передайте данные пользователю лично.');
+      }
+      if(type==='quiz-settings'){
+        await request('/admin/quiz-config',{method:'PUT',body:{title:data.title,question_count:Number(data.question_count),duration_seconds:Math.round(Number(data.duration_minutes)*60),pass_percent:Number(data.pass_percent),max_attempts:Number(data.max_attempts),enabled:data.enabled==='on'}});
+        dirty=false;await ui.reloadPublic();await refresh();ui.toast('Настройки теста сохранены.');
+      }
+      if(type==='expert-directions'){
+        await request(`/admin/experts/${encodeURIComponent(data.expert_id)}/directions`,{method:'PUT',body:{nomination_ids:new FormData(form).getAll('nomination_id')}});
+        dirty=false;await refresh();ui.toast('Направления эксперта сохранены.');
+      }
       if(type==='settings') {
         const item=c[c.tab].find(row=>row.id===c.selected);
         const body=c.tab==='stages'?{title:data.title,starts_at:data.starts_at?new Date(data.starts_at).toISOString():null,ends_at:data.ends_at?new Date(data.ends_at).toISOString():null,is_enabled:data.enabled==='on',position:Number(data.position)}:c.tab==='nominations'?{title:data.title,description:data.description,is_active:data.enabled==='on'}:{name:data.name,description:data.description,max_score:Number(data.max_score),weight:Number(data.weight),is_active:data.enabled==='on'};

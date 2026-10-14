@@ -3,28 +3,24 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import secrets
 import threading
 from pathlib import Path
 from uuid import UUID
 
-import qrcode
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
-from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.certificate_design import render_document
 from app.config import settings
 from app.db import get_db
 from app.dependencies import get_current_user
-from app.models import Certificate, QuizAttempt, User, utcnow
+from app.models import Certificate, QuizAttempt, TeacherLink, User, utcnow
 
 router = APIRouter(prefix="/certificates", tags=["certificates"])
 _font_lock = threading.Lock()
@@ -67,6 +63,11 @@ def issue_quiz_certificate(db: Session, attempt: QuizAttempt) -> Certificate:
         title=attempt.config_snapshot.get("title", "Удивительная и неизведанная Арктика"),
         issued_at=issued_at,
         public_token=secrets.token_urlsafe(32),
+        mentor_name=db.scalar(
+            select(User.full_name)
+            .join(TeacherLink, TeacherLink.teacher_id == User.id)
+            .where(TeacherLink.participant_id == attempt.user_id, TeacherLink.status == "accepted")
+        ),
     )
     db.add(certificate)
     db.flush()
@@ -141,96 +142,9 @@ def _fit_centered(
 
 
 def build_certificate_pdf(certificate: Certificate, user: User) -> bytes:
-    """Generate a one-page PDF with embedded Unicode font and verification QR."""
-    font = _certificate_font()
-    output = io.BytesIO()
-    width, height = landscape(A4)
-    pdf = canvas.Canvas(output, pagesize=(width, height), pageCompression=1)
-    pdf.setTitle(f"Сертификат {certificate.number}")
-    pdf.setAuthor("Удивительная и неизведанная Арктика")
-    pdf.setFillColor(HexColor("#E9F0F3"))
-    pdf.rect(0, 0, width, height, fill=1, stroke=0)
-    pdf.setFillColor(HexColor("#FFFFFF"))
-    pdf.rect(24, 24, width - 48, height - 48, fill=1, stroke=0)
-    pdf.setStrokeColor(HexColor("#345F73"))
-    pdf.setLineWidth(1.2)
-    pdf.rect(38, 38, width - 76, height - 76, fill=0, stroke=1)
-    # Северный силуэт остаётся лёгким при печати на обычной бумаге.
-    pdf.setFillColor(HexColor("#E9F0F3"))
-    ridge = pdf.beginPath()
-    ridge.moveTo(39, 39)
-    for x, y in [(39, 66), (110, 93), (162, 68), (234, 114), (299, 76), (376, 99), (462, 60), (width - 39, 52), (width - 39, 39)]:
-        ridge.lineTo(x, y)
-    ridge.close()
-    pdf.drawPath(ridge, fill=1, stroke=0)
-    pdf.setFillColor(HexColor("#345F73"))
-    pdf.setFont(font, 12)
-    pdf.drawCentredString(width / 2, 511, "УДИВИТЕЛЬНАЯ И НЕИЗВЕДАННАЯ АРКТИКА")
-    pdf.setFillColor(HexColor("#1D343D"))
-    layouts = {
-        "test_passed": (
-            "СЕРТИФИКАТ",
-            "об успешном прохождении тестирования",
-            "Настоящим подтверждается, что",
-            "успешно прошёл(прошла) тестирование",
-        ),
-        "test_participation": (
-            "СЕРТИФИКАТ",
-            "участника тестирования",
-            "Настоящим подтверждается, что",
-            "принял(а) участие в тестировании",
-        ),
-        "diploma": (
-            "ДИПЛОМ",
-            "за достижения в конкурсе",
-            "Награждается",
-            "За достижения в исследовательском конкурсе",
-        ),
-        "teacher_thanks": (
-            "БЛАГОДАРНОСТЬ",
-            "наставнику участников конкурса",
-            "Настоящей благодарностью отмечается",
-            "За подготовку и поддержку участников конкурса",
-        ),
-    }
-    heading, subtitle, introduction, description = layouts.get(
-        certificate.kind,
-        ("СЕРТИФИКАТ", "участника конкурса", "Настоящим сертификатом отмечается", "За участие в конкурсе"),
+    return render_document(
+        certificate, user, _certificate_font(), verification_url(certificate), _fit_centered
     )
-    mascot = Path(__file__).with_name('assets') / 'arctic-bear.png'
-    if mascot.is_file():
-        pdf.drawImage(str(mascot), 54, 382, width=130, height=130, mask='auto')
-    pdf.setFont(font, 34 if certificate.kind == "teacher_thanks" else 39)
-    pdf.drawCentredString(width / 2, 448, heading)
-    pdf.setFont(font, 15)
-    pdf.drawCentredString(width / 2, 414, subtitle)
-    pdf.setFillColor(HexColor("#58717E"))
-    pdf.setFont(font, 11)
-    pdf.drawCentredString(width / 2, 367, introduction)
-    pdf.setFillColor(HexColor("#1D343D"))
-    _fit_centered(pdf, user.full_name, font, width / 2, 333, 660, 74, 27)
-    pdf.setFillColor(HexColor("#58717E"))
-    pdf.setFont(font, 12)
-    pdf.drawCentredString(width / 2, 253, description)
-    pdf.setFillColor(HexColor("#1D343D"))
-    _fit_centered(pdf, certificate.title, font, width / 2, 224, 660, 54, 18)
-    pdf.setFont(font, 10)
-    pdf.drawString(78, 139, f"Номер: {certificate.number}")
-    pdf.drawString(78, 116, f"Дата выдачи: {certificate.issued_at:%d.%m.%Y}")
-    pdf.setFillColor(HexColor("#58717E"))
-    pdf.setFont(font, 9)
-    pdf.drawString(78, 80, "Подлинность сертификата подтверждается по QR-коду.")
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=7, border=4)
-    qr.add_data(verification_url(certificate))
-    qr.make(fit=True)
-    qr_image = qr.make_image(fill_color="black", back_color="white")
-    png = io.BytesIO()
-    qr_image.save(png, format="PNG")
-    png.seek(0)
-    pdf.drawImage(ImageReader(png), width - 184, 71, width=106, height=106)
-    pdf.showPage()
-    pdf.save()
-    return output.getvalue()
 
 
 @router.get("")
