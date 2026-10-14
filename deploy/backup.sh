@@ -18,7 +18,7 @@ resume_services=()
 
 resume_writers() {
     if ((${#resume_services[@]})); then
-        docker compose --profile mail start --wait --wait-timeout 120 "${resume_services[@]}" \
+        docker compose --profile mail up -d --no-deps --wait --wait-timeout 120 "${resume_services[@]}" \
             >>"$backup_dir/services.log" 2>&1 || return 1
         resume_services=()
     fi
