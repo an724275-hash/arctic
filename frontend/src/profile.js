@@ -35,7 +35,6 @@ export function createProfile(s,ui) {
       }else{const body={full_name:data.get('full_name'),school:data.get('school')||null,city:data.get('city')||null,region:data.get('region')||null,grade:data.get('grade')?Number(data.get('grade')):null};if(data.get('avatar_kind'))body.avatar_kind=data.get('avatar_kind');s.user=await request('/users/me',{method:'PATCH',body});}
       if(form.dataset.profileForm==='details')detailsDirty=false;
       setSession({...getSession(),user:s.user});await photo();
-      document.querySelector('.header-avatar')?.replaceWith(avatarNode('header-avatar'));
       if(!photoDirty)document.querySelector('.profile-avatar')?.replaceWith(avatarNode('profile-avatar'));
       message.textContent='Сохранено.';
       ui.toast(form.dataset.profileForm==='photo'?'Фотография сохранена.':'Профиль сохранён.');
