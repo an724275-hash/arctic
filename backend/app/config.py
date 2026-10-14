@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     smtp_from: str = "noreply@example.com"
     smtp_starttls: bool = True
     enable_email_delivery: bool = False
+    gigachat_credentials: str = ""
+    gigachat_scope: str = "GIGACHAT_API_PERS"
+    gigachat_model: str = "GigaChat-2-Max"
+    gigachat_ca_bundle: str = ""
     rate_limit_per_minute: int = 120
     auth_rate_limit_per_minute: int = 20
 

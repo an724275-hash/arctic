@@ -277,3 +277,9 @@ class AuditLog(IdMixin, Base):
     entity_id: Mapped[str | None] = mapped_column(String(100))
     details: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AssistantRequest(IdMixin, Base):
+    __tablename__ = "assistant_requests"
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

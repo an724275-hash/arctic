@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -26,7 +28,15 @@ app = FastAPI(
     version="1.0.0",
     description="Участники, тестирование, проекты, экспертиза и управление конкурсом. Все даты — ISO 8601 с часовым поясом.",
     lifespan=lifespan,
+    docs_url=None if settings.environment == "production" else "/docs",
+    redoc_url=None if settings.environment == "production" else "/redoc",
+    openapi_url=None if settings.environment == "production" else "/openapi.json",
 )
+if settings.environment == "production":
+    hosts = {"localhost", "127.0.0.1", "api"}
+    hosts.update(filter(None, (urlsplit(origin).hostname for origin in settings.allowed_origins)))
+    hosts.add(urlsplit(settings.public_base_url).hostname or "localhost")
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=sorted(hosts))
 app.add_middleware(ApiMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -65,7 +75,7 @@ def ready(db: Session = Depends(get_db)):
     return {"status": "ready", "database": "postgresql"}
 
 
-from app import admin, auth, avatars, certificates, content, projects, quiz, reviews  # noqa: E402
+from app import admin, assistant, auth, avatars, certificates, content, projects, quiz, reviews  # noqa: E402
 
-for module in (auth, avatars, content, quiz, certificates, projects, reviews, admin):
+for module in (auth, avatars, content, quiz, certificates, projects, reviews, admin, assistant):
     app.include_router(module.router, prefix="/api/v1")

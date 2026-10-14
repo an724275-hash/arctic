@@ -1,3 +1,4 @@
+import {installAssistant} from './assistant.js';
 import './styles.css';
 import './app.css';
 import './roles.css';
@@ -585,5 +586,6 @@ async function boot() {
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
 installNavigationPolish();
+installAssistant();
 void boot();
 
