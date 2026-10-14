@@ -1,0 +1,32 @@
+.reading-page { max-width: 780px; margin: 48px auto 96px; }
+.reading-page h1 { max-width: 22ch; margin: 0 0 24px; font-size: clamp(32px, 4vw, 52px); line-height: 1.12; letter-spacing: -.035em; text-wrap: balance; }
+.reading-page h2 { margin: 0 0 16px; font-size: 25px; letter-spacing: -.02em; }
+.reading-page p, .reading-body { max-width: 67ch; font-size: 17px; line-height: 1.8; color: var(--ink); }
+.reading-page .reading-lead { color: var(--muted); font-size: 21px; line-height: 1.65; }
+.reading-page section { margin-top: 40px; }
+.reading-body { margin-top: 36px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.reading-next { margin-top: 56px; padding: 32px; background: var(--paper); border-radius: 20px; }
+.reading-next .button { margin-top: 12px; }
+.help-questions { margin-top: 32px; display: grid; gap: 12px; }
+.help-questions details { background: var(--paper); padding: 20px 24px; border-radius: 14px; }
+.help-questions summary { min-height: 44px; display: list-item; align-content: center; font-size: 17px; font-weight: 600; cursor: pointer; }
+.help-questions details p { margin: 12px 0 4px; }
+.help-questions details[hidden] { display: none; }
+.faq-search { margin-top: 32px; }
+.article-sources li { margin: 12px 0; overflow-wrap: anywhere; line-height: 1.6; }
+.article-sources a { color: var(--blue-dark); text-underline-offset: 4px; }
+.education-catalog a { align-items: start; gap: 20px; }
+.topic-number { flex: 0 0 32px; font-size: 18px; font-weight: 600; color: var(--muted); }
+.education-catalog a > div { flex: 1; min-width: 0; }
+.education-catalog p { max-width: 64ch; line-height: 1.65; }
+.nomination-list strong { display: block; font-weight: 600; }
+.nomination-list small { display: block; margin-top: 8px; font-size: 15px; line-height: 1.6; color: var(--muted); }
+.menu-links a[aria-current='page'] { background: var(--ice); color: var(--blue-dark); border-radius: 10px; }
+@media(max-width:700px) {
+  .reading-page { margin: 32px 0 64px; }
+  .reading-page .reading-lead { font-size: 18px; }
+  .reading-page p, .reading-body { font-size: 16px; }
+  .reading-page h2 { font-size: 23px; }
+  .reading-next { padding: 24px 20px; }
+  .help-questions details { padding: 16px 20px; }
+}

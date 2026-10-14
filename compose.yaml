@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-arctic}
+      POSTGRES_USER: ${POSTGRES_USER:-arctic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    build: ./backend
+    environment: &api_environment
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-arctic}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-arctic}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://127.0.0.1:5173}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:5173}
+      FORWARDED_ALLOW_IPS: ${TRUSTED_PROXY_IPS:-127.0.0.1}
+      UPLOADS_DIR: /app/storage/uploads
+      ENABLE_EMAIL_DELIVERY: ${ENABLE_EMAIL_DELIVERY:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@example.com}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: ./backend
+    environment: *api_environment
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - uploads:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mail-worker:
+    build: ./backend
+    environment: *api_environment
+    command: ["python", "-m", "app.mail_worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    profiles: ["mail"]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads:

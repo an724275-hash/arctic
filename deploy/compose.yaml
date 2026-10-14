@@ -1,0 +1,131 @@
+name: arctic
+
+x-log: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+x-api-env: &api-env
+  ENVIRONMENT: production
+  DATABASE_URL: postgresql+psycopg://arctic:${POSTGRES_PASSWORD:?Run init-env.py}@db:5432/arctic
+  JWT_SECRET: ${JWT_SECRET:?Run init-env.py}
+  PUBLIC_BASE_URL: ${PUBLIC_ORIGIN:?Set public origin}
+  FRONTEND_URL: ${PUBLIC_ORIGIN:?Set public origin}
+  CORS_ORIGINS: ${PUBLIC_ORIGIN:?Set public origin}
+  FORWARDED_ALLOW_IPS: "172.30.82.10"
+  UPLOADS_DIR: /app/storage/uploads
+  MAX_UPLOAD_MB: "30"
+  ENABLE_EMAIL_DELIVERY: ${ENABLE_EMAIL_DELIVERY:-false}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-noreply@example.com}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: arctic
+      POSTGRES_USER: arctic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run init-env.py}
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=64", "-c", "work_mem=4MB", "-c", "maintenance_work_mem=64MB"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    networks: [internal]
+    shm_size: 128mb
+    mem_limit: 600m
+    logging: *logging
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arctic -d arctic"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    image: arctic-api:local
+    build: ../backend
+    environment: *api-env
+    command: ["alembic", "upgrade", "head"]
+    networks: [internal]
+    mem_limit: 384m
+    logging: *logging
+    depends_on:
+      db: { condition: service_healthy }
+
+  api:
+    image: arctic-api:local
+    build: ../backend
+    environment: *api-env
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--limit-concurrency", "64", "--timeout-keep-alive", "5"]
+    volumes: ["uploads:/app/storage"]
+    networks: [internal]
+    mem_limit: 700m
+    init: true
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    image: arctic-web:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./.runtime/nginx:/etc/nginx/conf.d:ro
+      - acme:/var/www/acme:ro
+      - certificates:/etc/letsencrypt:ro
+    networks:
+      internal: { ipv4_address: 172.30.82.10 }
+    mem_limit: 96m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/nginx-health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  mail-worker:
+    image: arctic-api:local
+    environment: *api-env
+    command: ["python", "-m", "app.mail_worker"]
+    profiles: ["mail"]
+    networks: [internal]
+    mem_limit: 192m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  certbot:
+    image: certbot/certbot:latest
+    profiles: ["tls"]
+    volumes: ["acme:/var/www/acme", "certificates:/etc/letsencrypt"]
+    networks: [internal]
+    mem_limit: 256m
+    logging: *logging
+
+networks:
+  internal:
+    ipam:
+      config: [{ subnet: 172.30.82.0/24 }]
+
+volumes:
+  postgres_data:
+  uploads:
+  certificates:
+  acme:
