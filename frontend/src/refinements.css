@@ -62,3 +62,11 @@ dialog::backdrop { background:rgba(24,56,71,.38); }
   .shell .profile-photo-panel h2 { font-size:22px; }
   .shell .header .brand { min-width:0; }
 }
+@media(max-width:360px) {
+  .shell .header .brand { gap:6px; }
+  .shell .header .brand-mark { width:24px; height:24px; }
+  .shell .header .brand-name { font-size:18px; }
+  .shell .header .brand-note { display:none; }
+  .shell .header-actions { gap:2px; }
+  .shell .header-actions>.account-button { min-width:44px; min-height:44px; padding:4px; }
+}
