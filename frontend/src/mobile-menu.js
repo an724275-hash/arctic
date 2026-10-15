@@ -1,28 +1,32 @@
 import {icon, escapeHtml as e} from './ui.js';
 import {routeUrl} from './routes.js';
+import './mobile-menu.css';
 
 export function mobileMenu(state) {
-  const items = [
-    ['home', 'Главная', 'home'],
-    ['about', 'О конкурсе', 'compass'],
-    ['participation', 'Как участвовать', 'check'],
-    ['materials', 'Открывай Север', 'book'],
-    ['preparation', 'Подготовка к конкурсу', 'mountain'],
-    ['news', 'Новости', 'file'],
-    ['media', 'Медиатека', 'image'],
-    ['rules', 'Положение', 'shield'],
-    ['help', 'Помощь', 'info'],
-    ['partners', 'Партнёрам', 'users'],
-    ['contacts', 'Связь с организатором', 'message'],
+  const groups = [
+    ['Конкурс', [
+      ['home', 'Главная', 'home'], ['about', 'О конкурсе', 'compass'],
+      ['participation', 'Как участвовать', 'check'], ['rules', 'Положение', 'shield'],
+      ['news', 'Новости', 'file'],
+    ]],
+    ['Открывай Север', [
+      ['preparation', 'Подготовка к конкурсу', 'mountain'],
+      ['materials', 'Статьи об Арктике', 'book'], ['media', 'Медиатека', 'image'],
+    ]],
+    ['Помощь и связь', [
+      ['help', 'Помощь', 'info'], ['contacts', 'Связь с организатором', 'message'],
+      ['partners', 'Партнёрам', 'users'],
+    ]],
   ];
+  const account = [['dashboard', state.user ? 'Личный кабинет' : 'Войти', 'user']];
   if (state.user) {
-    items.push(['profile', 'Настройки профиля', 'settings']);
-    if (state.user.role !== 'partner') items.push(['awards', 'Мои документы', 'file']);
-    items.push(['notifications', 'Уведомления', 'bell']);
+    account.push(['profile', 'Настройки профиля', 'settings']);
+    if (state.user.role !== 'partner') account.push(['awards', 'Мои документы', 'file']);
+    account.push(['notifications', 'Уведомления', 'bell']);
   }
-  items.push(['dashboard', state.user ? 'Личный кабинет' : 'Войти', 'user']);
-  return `<nav class="menu-links" aria-label="Разделы сайта">${items.map(([route, label, symbol]) => {
+  groups.unshift(['Аккаунт', account]);
+  return `<div class="mobile-menu-heading"><h2 id="dialog-title">Меню</h2><button type="button" class="round-icon" data-action="close" aria-label="Закрыть меню">${icon('close')}</button></div><nav class="mobile-menu-body" aria-label="Разделы сайта">${groups.map(([title, items], index) => `<section class="menu-section" aria-labelledby="menu-group-${index}"><h3 id="menu-group-${index}">${title}</h3>${items.map(([route, label, symbol]) => {
     const current = state.route === route || route === 'materials' && state.route === 'article';
-    return `<a href="${routeUrl(route)}" data-route="${route}" ${current ? 'aria-current="page"' : ''}>${icon(symbol)}<span>${e(label)}</span></a>`;
-  }).join('')}${state.user ? `<button class="link-button" data-action="logout">${icon('back')}<span>Выйти из аккаунта</span></button>` : ''}</nav>`;
+    return `<a href="${routeUrl(route)}" data-route="${route}" ${current ? 'aria-current="page"' : ''}>${icon(symbol)}<span>${e(label)}</span>${current ? '<small>Открыто</small>' : ''}</a>`;
+  }).join('')}</section>`).join('')}${state.user ? `<button class="menu-logout" data-action="logout">${icon('back')}<span>Выйти из аккаунта</span></button>` : ''}</nav>`;
 }

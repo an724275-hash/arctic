@@ -460,7 +460,13 @@ async function action(name) {
       workspace.reset();
       control.reset();profile.reset();
       return navigate('home', { force: true });
-    case 'menu': modal('Меню', mobileMenu(state)); break;
+    case 'menu':
+      if (dialog.open) dialog.close();
+      dialog.classList.add('menu-dialog');
+      dialog.innerHTML = mobileMenu(state);
+      dialog.addEventListener('close', () => dialog.classList.remove('menu-dialog'), { once: true });
+      dialog.showModal();
+      break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
     case 'rules': return navigate('rules');
