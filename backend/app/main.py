@@ -75,7 +75,7 @@ def ready(db: Session = Depends(get_db)):
     return {"status": "ready", "database": "postgresql"}
 
 
-from app import admin, assistant, auth, avatars, certificates, content, projects, quiz, reviews  # noqa: E402
+from app import admin, assistant, auth, avatars, certificates, comments, content, projects, quiz, reviews  # noqa: E402
 
-for module in (auth, avatars, content, quiz, certificates, projects, reviews, admin, assistant):
+for module in (auth, avatars, content, quiz, certificates, projects, reviews, admin, assistant, comments):
     app.include_router(module.router, prefix="/api/v1")

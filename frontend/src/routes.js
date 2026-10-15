@@ -26,6 +26,7 @@ export function routeUrl(route, query = '') {
 }
 
 export const pageTitles = {
+  'comment-moderation':'Комментарии',
   testing:'Тест по Арктике',preparation:'Подготовка к конкурсу','expert-directions':'Направления экспертов',
   'question-bank':'Банк вопросов','content-editor':'Контент сайта',overview:'Обзор конкурса','contest-settings':'Настройки конкурса',people:'Участники',communications:'Обращения и уведомления',notifications:'Уведомления',profile:'Настройки профиля',awards:'Документы и награды',news:'Новости',
   home: 'Открой свою Арктику', about: 'О конкурсе', participation: 'Как участвовать',

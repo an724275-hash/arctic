@@ -1,0 +1,15 @@
+.article-comments { margin-top:40px; padding-top:24px; border-top:1px solid var(--line); }
+.article-comments>summary { min-height:44px; align-content:center; cursor:pointer; font-size:21px; font-weight:600; }
+.comment-row { margin-top:16px; padding:20px 0; border-bottom:1px solid var(--line); min-width:0; }
+.comment-row header { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; font-size:14px; }
+.comment-row time { color:var(--muted); font-size:12px; }
+.comment-row>p { white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; line-height:1.65; margin:14px 0; }
+.comment-row.own-comment { background:var(--ice); padding:16px; border-radius:6px; }
+.article-comments form,[data-comment-rejection] { display:grid; gap:12px; margin-top:24px; }
+.article-comments form>label,[data-comment-rejection]>label { font-weight:600; }
+.article-comments form .form-caption { font-size:13px; margin:0; }
+.comment-filter { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:20px 0; }
+.comment-filter select { width:auto; min-width:200px; }
+.comment-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; }
+.moderation-row { background:var(--paper); padding:24px; border:1px solid var(--line); border-radius:6px; }
+@media(max-width:600px) { .moderation-row { padding:20px 16px; } .comment-row .form-actions { flex-wrap:wrap; } }

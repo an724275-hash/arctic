@@ -229,6 +229,19 @@ class Content(IdMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class ArticleComment(IdMixin, Base):
+    __tablename__ = "article_comments"
+    __table_args__ = (CheckConstraint("status IN ('pending','approved','rejected','withdrawn')"),)
+    article_slug: Mapped[str] = mapped_column(String(160), index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    body: Mapped[str] = mapped_column(String(2000))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    reason: Mapped[str] = mapped_column(String(500), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    moderated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    moderator_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+
+
 class Stage(IdMixin, Base):
     __tablename__ = "stages"
     slug: Mapped[str] = mapped_column(String(80), unique=True)

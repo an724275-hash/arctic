@@ -14,7 +14,7 @@ class InputModel(BaseModel):
     def trim_profile_strings(cls, value, info):
         if isinstance(value, str) and info.field_name not in {"password", "token", "refresh_token"}:
             value = value.strip()
-            multiline = info.field_name in {"description", "body", "message", "comment", "abstract"}
+            multiline = info.field_name in {"description", "body", "message", "comment", "abstract", "reason"}
             if any(ord(char) < 32 and not (multiline and char in "\r\n\t") for char in value):
                 raise ValueError("Поле не должно содержать управляющие символы")
             return value

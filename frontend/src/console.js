@@ -1,3 +1,4 @@
+import {commentModerationView} from './comments.js';
 import {regionMap} from './region-map.js';
 import {userManagementForm} from './user-management.js';
 import {questionBankView} from './question-bank.js';
@@ -8,10 +9,10 @@ import './console.css';
 import {expertSettings} from './expert-settings.js';
 import {testingSettings} from './testing-settings.js';
 
-export const consoleRoutes = new Set(['question-bank','content-editor','overview','contest-settings','people','expert-directions','communications','notifications']);
+export const consoleRoutes = new Set(['comment-moderation','question-bank','content-editor','overview','contest-settings','people','expert-directions','communications','notifications']);
 const labels = {participant:'Участник',teacher:'Наставник',expert:'Эксперт',admin:'Организатор',commission:'Комиссия',partner:'Партнёр'};
 const statuses = {draft:'Черновик',submitted:'Проверка',admitted:'Допущен',rejected:'Исправления',reviewing:'Экспертиза',evaluated:'Оценён'};
-const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['content-editor','book','Контент'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['question-bank','book','Банк вопросов'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
+const nav = [['overview','compass','Обзор'],['workspace','folder','Проекты'],['content-editor','book','Контент'],['comment-moderation','message','Комментарии'],['people','user','Участники'],['expert-directions','user','Эксперты'],['contest-settings','shield','Конкурс'],['question-bank','book','Банк вопросов'],['communications','book','Обращения и уведомления'],['rankings','check','Результаты']];
 const link = (route,label,symbol='arrow')=>`<a href="/#${route}" data-route="${route}">${icon(symbol)}<span>${e(label)}</span></a>`;
 const date = value=>value ? new Date(value).toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'}) : 'Срок не указан';
 const num = value=>Number(value || 0).toLocaleString('ru-RU');
@@ -58,7 +59,7 @@ function notifications(s) {
   const rows=s.console.notifications;
   return `${heading('Уведомления','Сообщения организатора и события участия. Здесь нет рекламной рассылки или сообщений из внешних сервисов.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
 }
-export const consoleViews={'question-bank':questionBankView,'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
+export const consoleViews={'comment-moderation':commentModerationView,'question-bank':questionBankView,'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
 
 export function createConsole(s,ui) {
   s.console={bank:{items:[],selected:null,query:'',difficulty:'',offset:0},cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};

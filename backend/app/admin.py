@@ -28,6 +28,7 @@ from app.common import audit
 from app.db import get_db
 from app.dependencies import get_current_user, require_roles
 from app.models import (
+    ArticleComment,
     Assignment,
     AuditLog,
     Certificate,
@@ -369,6 +370,7 @@ def delete_user(user_id: str, db: Db, actor: Admin):
         raise HTTPException(409, "Нельзя удалить последнего активного администратора")
     _revoke(db, user)
     old_avatar = user.avatar_filename
+    db.execute(delete(ArticleComment).where(ArticleComment.user_id == user.id))
     user.avatar_filename = None
     user.avatar_kind = "bear"
     user.email = f"deleted-{user.id}@example.invalid"

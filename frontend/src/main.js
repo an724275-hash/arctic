@@ -1,3 +1,4 @@
+import {installComments, loadCommentModeration, hasCommentDraft} from './comments.js';
 import {installRegistrationTeacher, requireRegistrationTeacher} from './registration-teacher.js';
 import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
@@ -92,6 +93,7 @@ function render(scroll = false) {
   updateSeo();
   syncAssistant(state.route);
   syncPresence();
+  if(state.route==='comment-moderation'&&!state.loading&&!state.error)void loadCommentModeration();
   // при прокрутке
   revealSections();
 }
@@ -204,6 +206,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
     }
     else history.replaceState({ arcticIndex: activeHistoryIndex }, '', activeUrl);
   };
+  if (!force && hasCommentDraft() && !window.confirm('Уйти со страницы? Неотправленный комментарий будет потерян.')) return stay();
   if (!force && !workspace.canLeave()) return stay();
   if (!force && (!control.canLeave() || !profile.canLeave())) return stay();
   if (!force && formBusy) { toast('Подожди, завершаем сохранение.'); return stay(); }
@@ -474,6 +477,7 @@ async function action(name) {
       break;
     case 'sound-toggle': await toggleSound(); break;
     case 'vk-login': modal('Вход через VK ID', '<p>Подключение VK ID ещё не настроено. Войти через ВКонтакте сейчас нельзя.</p><p>Используй электронную почту и пароль или зарегистрируй аккаунт. Результаты и сертификаты сохранятся в твоём кабинете.</p>'); break;
+    case 'comment-login': pendingRoute=routeHash('article',state.articleSlug);return navigate('login');
     case 'rules': return navigate('rules');
     case 'help': return navigate('help');
     case 'close': dialog.close(); break;
@@ -613,7 +617,7 @@ function followHistory() {
 }
 window.addEventListener('popstate', followHistory);
 window.addEventListener('hashchange', followHistory);
-window.addEventListener('beforeunload', event => { if (draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (hasCommentDraft() || draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
 setInterval(() => {
   if (!state.attempt || state.attempt.status !== 'active' || !['quiz','quiz-confirm'].includes(state.route) || state.loading) return;
   const timer = document.querySelector('#timer'); if (timer) timer.textContent = timerText(state);
@@ -630,6 +634,7 @@ async function boot() {
   }
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
+installComments({modal,toast});
 installRegistrationTeacher();
 installInteractionMotion();
 installNavigationPolish();

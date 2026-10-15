@@ -422,8 +422,8 @@
   {
     "id": "TZ-071",
     "requirement": "Модерация комментариев и заявок.",
-    "status": "API CMS существует; полный интерфейс редактора и комментариев требует завершения",
-    "evidence": "backend/app/content.py/admin_content; frontend/src/console.js"
+    "status": "комментарии с предварительной модерацией реализованы и проверены; публичны только одобренные, автор может удалить текст; заявки обрабатываются в существующем разделе обращений",
+    "evidence": "backend/tests/test_comments.py; output/release/comments-e2e.json; frontend/src/comments.js; frontend/src/contact.js"
   },
   {
     "requirement": "15. Управление конкурсом",
