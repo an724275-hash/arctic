@@ -6,7 +6,7 @@ let pending = false;
 let sessionId;
 
 export function presenceLabel() {
-  return '<p class="online-presence" data-online-count hidden title="Активные сессии за последние две минуты"></p>';
+  return '<span class="online-presence" data-online-count hidden role="img"><span class="presence-dot" aria-hidden="true"></span><span data-presence-value aria-hidden="true"></span></span>';
 }
 
 export function syncPresence() {
@@ -14,7 +14,12 @@ export function syncPresence() {
   if (!node) return;
   const fresh = Number.isInteger(latest) && Date.now() - refreshedAt < 120000;
   node.hidden = !fresh;
-  if (fresh) node.textContent = `Сейчас на сайте: ${latest.toLocaleString('ru-RU')}`;
+  if (fresh) {
+    const label = `Сейчас на сайте: ${latest.toLocaleString('ru-RU')}. Активные сессии за последние две минуты.`;
+    node.querySelector('[data-presence-value]').textContent = latest.toLocaleString('ru-RU');
+    node.title = label;
+    node.setAttribute('aria-label', label);
+  }
 }
 
 async function heartbeat() {
