@@ -1,3 +1,4 @@
+import {contactInbox,loadContactInbox} from './contact-inbox.js';
 import {commentModerationView} from './comments.js';
 import {regionMap} from './region-map.js';
 import {userManagementForm} from './user-management.js';
@@ -49,20 +50,30 @@ function settings(s) {
 }
 function people(s) {
   const c=s.console;
-  return `${heading('Участники и команда конкурса','Поиск работает по ФИО и почте. Данные доступны только организатору; роль и состояние аккаунта отображаются из базы.')}<section class="panel"><form data-console-form="people" class="console-filter"><div class="form-field"><label for="people-search">Имя или электронная почта</label><input id="people-search" name="q" type="search" maxlength="200" value="${e(c.query)}" placeholder="Найти участника"></div><div class="form-field"><label for="people-role">Роль</label><select id="people-role" name="role"><option value="">Все роли</option>${Object.entries(labels).map(([id,label])=>`<option value="${id}" ${c.role===id?'selected':''}>${label}</option>`).join('')}</select></div><button class="button secondary" type="submit">Найти</button></form><div class="console-table-wrap"><table class="console-table"><thead><tr><th>Участник</th><th>Роль</th><th>Учебное заведение</th><th>Регион и город</th><th>Аккаунт</th><th>Доступ и согласия</th></tr></thead><tbody>${c.people.items.map(user=>`<tr><td><strong>${e(user.full_name)}</strong><small>${e(user.email)}</small></td><td>${labels[user.role]||e(user.role)}</td><td>${e(user.school||'Не указано')}${user.grade?`<small>${user.grade} класс</small>`:''}</td><td>${e(user.region||'Не указан')}<small>${e(user.city||'')}</small></td><td>${user.is_active?'Активен':'Отключён'}<small>${user.email_verified?'Почта подтверждена':'Почта не подтверждена'}</small></td><td><button class="button secondary small" type="button" data-console="user-access" data-id="${e(user.id)}">Открыть</button></td></tr>`).join('')}</tbody></table></div>${!c.people.items.length?blank('По этому запросу ничего не найдено. Измени имя или роль.'):''}<div class="console-pagination"><span>Найдено ${num(c.people.total)} · ${c.offset+1}–${c.offset+c.people.items.length}</span><button class="link-button" data-console="people-back" ${c.offset?'':'disabled'}>Назад</button><button class="link-button" data-console="people-next" ${c.offset+c.people.items.length<c.people.total?'':'disabled'}>Далее</button></div></section>`;
+  return `${heading('Участники и команда конкурса','Поиск работает по ФИО и почте. Данные доступны только организатору; роль и состояние аккаунта отображаются из базы.')}<section class="panel"><form data-console-form="people" class="console-filter"><div class="form-field"><label for="people-search">Имя или электронная почта</label><input id="people-search" name="q" type="search" maxlength="200" value="${e(c.query)}" placeholder="Найти участника"></div><div class="form-field"><label for="people-role">Роль</label><select id="people-role" name="role"><option value="">Все роли</option>${Object.entries(labels).map(([id,label])=>`<option value="${id}" ${c.role===id?'selected':''}>${label}</option>`).join('')}</select></div><button class="button secondary" type="submit">Найти</button></form><div class="console-table-wrap"><table class="console-table"><thead><tr><th>Участник</th><th>Роль</th><th>Учебное заведение</th><th>Регион и город</th><th>Аккаунт</th><th>Доступ и согласия</th></tr></thead><tbody>${c.people.items.map(user=>`<tr><td><strong>${e(user.full_name)}</strong><small>${e(user.email)}</small></td><td>${labels[user.role]||e(user.role)}</td><td>${e(user.school||'Не указано')}${user.grade?`<small>${user.grade} класс</small>`:''}</td><td>${e(user.region||'Не указан')}<small>${e(user.city||'')}</small></td><td>${user.is_active?'Активен':'Отключён'}<small>${user.email_verified?'Почта подтверждена':'Почта не подтверждена'}</small></td><td><button class="button secondary small" type="button" data-console="user-access" data-id="${e(user.id)}">Открыть</button></td></tr>`).join('')}</tbody></table></div>${!c.people.items.length?blank('По этому запросу ничего не найдено. Измени имя или роль.'):''}<div class="console-pagination"><span>Найдено ${num(c.people.total)} · ${c.people.total?c.offset+1:0}–${c.offset+c.people.items.length}</span><button class="link-button" data-console="people-back" ${c.offset?'':'disabled'}>Назад</button><button class="link-button" data-console="people-next" ${c.offset+c.people.items.length<c.people.total?'':'disabled'}>Далее</button></div></section>`;
 }
 function communications(s) {
   const c=s.console;
-  return `${heading('Обращения и уведомления','Отвечай на запросы и информируй участников внутри кабинета. SMTP и VK пока не подключены; этот экран не отправляет письма или сообщения в соцсети.')}<div class="console-charts"><section class="panel"><h2>Обращения с сайта</h2><p class="chart-caption">Последние ${c.messages.items.length} из ${c.messages.total} обращений.</p>${c.messages.items.length?c.messages.items.map(message=>`<details class="contact-message"><summary>${e(message.name)}<span>${date(message.created_at)}</span></summary><p>${e(message.message)}</p><p>${e(message.email)}</p><label>Статус <select data-message-status="${e(message.id)}">${[['new','Новое'],['in_progress','В работе'],['resolved','Решено'],['closed','Закрыто']].map(([id,title])=>`<option value="${id}" ${id===message.status?'selected':''}>${title}</option>`).join('')}</select></label></details>`).join(''):blank('Обращений пока нет. Новые запросы появятся здесь после отправки формы обратной связи.')}</section><section class="panel"><h2>Новое уведомление</h2><form data-console-form="announcement" class="project-form">${field('title','Заголовок','','text','required minlength="2" maxlength="250"')}<div class="form-field"><label for="announcement-role">Аудитория</label><select id="announcement-role" name="role">${Object.entries(labels).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></div><div class="form-field"><label for="announcement-body">Текст сообщения</label><textarea id="announcement-body" name="body" required minlength="2" maxlength="10000" rows="5"></textarea></div><section class="announcement-preview" aria-label="Предпросмотр уведомления"><span>${icon('info')}В кабинете участника</span><h3 data-preview-title>Заголовок уведомления</h3><p data-preview-body>Текст появится здесь по мере ввода.</p></section><div class="form-message" role="alert"></div><button class="button" type="submit">Проверить и отправить ${icon('arrow')}</button><p class="form-caption">Перед отправкой будет запрошено подтверждение аудитории.</p></form></section></div>`;
+  return `${heading('Обращения и уведомления','Обрабатывай обращения и отправляй уведомления в личные кабинеты.')}<div class="console-charts">${contactInbox(c)}<section class="panel"><h2>Новое уведомление</h2><form data-console-form="announcement" class="project-form">${field('title','Заголовок','','text','required minlength="2" maxlength="250"')}<div class="form-field"><label for="announcement-role">Аудитория</label><select id="announcement-role" name="role">${Object.entries(labels).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></div><div class="form-field"><label for="announcement-body">Текст сообщения</label><textarea id="announcement-body" name="body" required minlength="2" maxlength="10000" rows="5"></textarea></div><section class="announcement-preview" aria-label="Предпросмотр уведомления"><span>${icon('info')}В кабинете участника</span><h3 data-preview-title>Заголовок уведомления</h3><p data-preview-body>Текст появится здесь по мере ввода.</p></section><div class="form-message" role="alert"></div><button class="button" type="submit">Проверить и отправить ${icon('arrow')}</button><p class="form-caption">Перед отправкой будет запрошено подтверждение аудитории.</p></form></section></div>`;
 }
 function notifications(s) {
   const rows=s.console.notifications;
-  return `${heading('Уведомления','Сообщения организатора и события участия. Здесь нет рекламной рассылки или сообщений из внешних сервисов.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
+  return `${heading('Уведомления','Сообщения организатора, результаты проверки и события конкурса.')}<div class="console-page-actions">${link('dashboard','Вернуться в кабинет','back')}<button class="button secondary small" data-console="read-all">Отметить прочитанными</button></div><section class="panel">${rows.length?rows.map(item=>`<article class="notification-item ${item.read_at?'':'unread'}"><div><h2>${e(item.title)}</h2><time>${date(item.created_at)}</time><p>${e(item.body)}</p></div>${!item.read_at?`<button class="link-button" data-console="read" data-id="${e(item.id)}">Прочитано ${icon('check')}</button>`:''}</article>`).join(''):blank('Новых сообщений пока нет. Когда организатор опубликует уведомление, оно появится здесь.')}</section>`;
 }
 export const consoleViews={'comment-moderation':commentModerationView,'question-bank':questionBankView,'content-editor':cmsView,overview,'contest-settings':settings,people,'expert-directions':expertSettings,communications,notifications};
 
+function initialConsole() {
+  return {
+    bank:{items:[],selected:null,query:'',difficulty:'',offset:0},
+    cms:{items:[],selected:'',query:'',kind:'',offset:0},
+    stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],quizConfig:null,
+    people:{items:[],total:0},query:'',role:'',offset:0,experts:{items:[],total:0},directions:[],
+    messages:{items:[],total:0},messagesOffset:0,messagesStatus:'',notifications:[],
+  };
+}
+
 export function createConsole(s,ui) {
-  s.console={bank:{items:[],selected:null,query:'',difficulty:'',offset:0},cms:{items:[],selected:'',query:'',kind:'',offset:0},stats:null,updated:null,tab:'stages',selected:'',stages:[],nominations:[],criteria:[],people:{items:[],total:0},query:'',role:'',offset:0,messages:{items:[],total:0},notifications:[]};
+  s.console=initialConsole();
   let busy=false,dirty=false,accessEditing=false;
   document.querySelector('#dialog').addEventListener('close',()=>{if(accessEditing){accessEditing=false;dirty=false;}});
   const c=s.console;
@@ -75,7 +86,7 @@ export function createConsole(s,ui) {
     if(route==='expert-directions') [c.experts,c.nominations,c.directions]=await Promise.all(['/admin/users?role=expert&limit=200','/admin/nominations','/admin/expert-directions'].map(url=>request(url)));
     if(route==='question-bank')c.bank.items=await request(`/admin/questions?limit=30&offset=${c.bank.offset}&q=${encodeURIComponent(c.bank.query)}${c.bank.difficulty?'&difficulty='+c.bank.difficulty:''}`);
     if(route==='content-editor'){c.cms.items=await request(`/admin/content?limit=30&offset=${c.cms.offset}&q=${encodeURIComponent(c.cms.query)}${c.cms.kind?'&kind='+c.cms.kind:''}`);}
-    if(route==='communications') c.messages=await request('/admin/messages?limit=100');
+    if(route==='communications') await loadContactInbox(c);
     if(route==='notifications') c.notifications=await request('/notifications');
   }
   const canLeave=()=>{if(busy)return false;if(dirty&&!window.confirm('Есть несохранённые изменения. Уйти со страницы?'))return false;dirty=false;return true;};
@@ -143,6 +154,16 @@ export function createConsole(s,ui) {
       if(!Object.hasOwn(reports,selected))throw new Error('Выбери отчёт из списка.');
       await download(`/admin/export/${selected}`,reports[selected]);
     }
+    if(action==='messages-prev'||action==='messages-next') {
+      const hadDraft=dirty;
+      if(!canLeave())return true;
+      busy=true;target.disabled=true;
+      try {
+        await loadContactInbox(c,Math.max(0,c.messagesOffset+(action==='messages-next'?30:-30)));
+        ui.render();
+      } catch(error) {dirty=hadDraft;throw error;}
+      finally {busy=false;target.disabled=false;}
+    }
     if(action.startsWith('people-')) {c.offset=Math.max(0,c.offset+(action==='people-next'?30:-30));await refresh();}
     if(action==='read-all') {await request('/notifications/read-all',{method:'POST'});await refresh();}
     if(action==='read') {await request(`/notifications/${target.dataset.id}/read`,{method:'PATCH'});await refresh();}
@@ -154,6 +175,15 @@ export function createConsole(s,ui) {
     const type=form.dataset.consoleForm;
     if(type==='bank-filter'){if(!canLeave())return;c.bank.query=data.q;c.bank.difficulty=data.difficulty;c.bank.offset=0;await refresh();return;}
     if(type==='cms-filter'){if(!canLeave())return;c.cms.query=data.q;c.cms.kind=data.kind;c.cms.offset=0;await refresh();return;}
+    if(type==='inbox-filter') {
+      const hadDraft=dirty;
+      if(!canLeave())return;
+      busy=true;
+      try{await loadContactInbox(c,0,data.status);ui.render();}
+      catch(error){dirty=hadDraft;throw error;}
+      finally{busy=false;}
+      return;
+    }
     if(type==='people') {c.query=data.q;c.role=data.role;c.offset=0;await refresh();return;}
     if(type==='announcement'&&!window.confirm(`Отправить уведомление всем активным аккаунтам роли «${labels[data.role]}»?`))return;
     busy=true;
@@ -229,7 +259,7 @@ export function createConsole(s,ui) {
   function input(event) {
     if(event.target.id==='cms-kind'){document.querySelector('.cms-media-fields').hidden=event.target.value!=='media';document.querySelector('.cms-banner-fields').hidden=event.target.value!=='banner';document.querySelector('.cms-document-fields').hidden=event.target.value!=='document';}
     const form=event.target.closest('[data-console-form]');
-    if(form&&!['people','cms-filter','bank-filter'].includes(form.dataset.consoleForm)) dirty=true;
+    if(form&&!['people','cms-filter','bank-filter','inbox-filter'].includes(form.dataset.consoleForm)) dirty=true;
     if(form?.dataset.consoleForm==='announcement') {
       document.querySelector('[data-preview-title]').textContent=form.elements.title.value||'Заголовок уведомления';
       document.querySelector('[data-preview-body]').textContent=form.elements.body.value||'Текст появится здесь по мере ввода.';
@@ -243,5 +273,5 @@ export function createConsole(s,ui) {
     catch(error){target.value=previous;ui.toast(error.message);}
     finally{target.disabled=false;}
   }
-  return {load,click,submit,input,change,rolesAllowed,canLeave,reset:()=>{dirty=false;busy=false;c.notifications=[];},get dirty(){return dirty;},get busy(){return busy;}};
+  return {load,click,submit,input,change,rolesAllowed,canLeave,reset:()=>{dirty=false;busy=false;for(const key of Object.keys(c))delete c[key];Object.assign(c,initialConsole());},get dirty(){return dirty;},get busy(){return busy;}};
 }

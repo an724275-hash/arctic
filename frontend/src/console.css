@@ -58,6 +58,9 @@
 .contact-message summary span { display:block; margin-top:8px; font-size:12px; color:var(--muted); }
 .contact-message p { margin:12px 0; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
 .contact-message select { margin-top:12px; width:100%; }
+.console-filter.inbox-filter { grid-template-columns:minmax(0,1fr) auto; margin-top:20px; }
+.console-filter.inbox-filter .button { grid-column:auto; }
+@media(max-width:700px) { .console-filter.inbox-filter { grid-template-columns:1fr; } }
 .announcement-preview { padding:24px; border-radius:20px; background:var(--ice); }
 .announcement-preview>span { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
 .announcement-preview h3 { margin:20px 0 12px; }

@@ -1,0 +1,16 @@
+{
+  "localIsolatedMessages": 105,
+  "reachedOlderThan100": true,
+  "pagesVisited": 4,
+  "statusFilter": true,
+  "statusUpdated": true,
+  "unsentAnnouncementProtected": true,
+  "failedPaginationKeepsDraftGuard": true,
+  "widths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "errors": []
+}
