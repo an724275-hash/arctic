@@ -1,0 +1,223 @@
+{
+  "base": "http://127.0.0.1:4175",
+  "checks": [
+    {
+      "route": "/",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/about",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/participation",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/preparation",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/news",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/rules",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/help",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/partners",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/media",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/contacts",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/arctic",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/polar-bear-guide",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/bear-islands",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/fragile-ice",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/arctic-professions",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/help-arctic",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "route": "/materials/northern-sea-route",
+      "status": 200,
+      "heading": true,
+      "images": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    }
+  ],
+  "errors": [],
+  "contactDraftGuard": true
+}

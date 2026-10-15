@@ -57,6 +57,21 @@ def test_contact_requires_consent_and_stores_no_outbound_email(client, db):
     assert not db.scalars(select(Outbox)).all()
 
 
+def test_contact_trims_fields_and_rejects_blank_or_control_characters(client, db):
+    payload = {
+        "name": "  Автор  ",
+        "email": "contact@example.com",
+        "message": "  Вопрос об участии\nВторая строка.  ",
+        "consent": True,
+    }
+    response = client.post("/api/v1/contact", json=payload)
+    assert response.status_code == 201
+    stored = db.get(ContactMessage, response.json()["id"])
+    assert stored.name == "Автор" and stored.message == "Вопрос об участии\nВторая строка."
+    for update in ({"name": "   "}, {"message": " " * 20}, {"message": "Текст\x00со скрытым символом"}):
+        assert client.post("/api/v1/contact", json={**payload, **update}).status_code == 422
+
+
 def test_stage_status_changes_from_dates_without_cron(client, db):
     stage = db.scalar(select(Stage).where(Stage.slug == "testing"))
     stage.starts_at = utcnow() - timedelta(days=2)

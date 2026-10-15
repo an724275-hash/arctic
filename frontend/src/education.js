@@ -137,7 +137,12 @@ export const educationArticles = {
         "Запиши вопрос, цель и план. Собери материалы, обсуди их с наставником и подготовь выводы. Даже небольшой результат полезен, если понятно, как ты его получил и что можно исследовать дальше."
       ]
     ],
-    "sources": []
+    "sources": [
+      [
+        "U.S. Fish & Wildlife Service: бережное посещение арктической природы",
+        "https://www.fws.gov/refuge/arctic/visit-us"
+      ]
+    ]
   },
   "northern-sea-route": {
     "title": "Северный морской путь: история и современность",
@@ -158,8 +163,8 @@ export const educationArticles = {
     ],
     "sources": [
       [
-        "Главсевморпуть: официальная информация",
-        "https://nsr.rosatom.ru/en/official-information/"
+        "Росатомфлот: Северный морской путь",
+        "https://www.rosatomflot.ru/o-predpriyatii/severnyy-morskoy-put/"
       ]
     ]
   }

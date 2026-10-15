@@ -1,0 +1,14 @@
+{
+  "articleSource": true,
+  "heroRatio": true,
+  "widths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "contactDraftGuard": true,
+  "blankContactRejected": true,
+  "noProductionMessageCreated": true,
+  "errors": []
+}

@@ -14,14 +14,14 @@
   {
     "id": "TZ-003",
     "requirement": "3. Принять и распределить по экспертам проектные работы II этапа.",
-    "status": "ручное назначение и экспертиза подтверждены браузерной проверкой; автоматическое распределение требует отдельной приёмки",
-    "evidence": "frontend/test-results/roles-e2e/report.json"
+    "status": "ручное назначение и экспертиза проверены; автоматическое назначение проверено на изолированных проектах: учтены направление, загрузка эксперта и повторный запуск без дублей",
+    "evidence": "frontend/test-results/roles-e2e/report.json; output/release/allocation-reports-e2e.json"
   },
   {
     "id": "TZ-004",
     "requirement": "4. Собрать аналитику по регионам, школам, темам — для отчётности перед ПФП и для тиражирования.",
-    "status": "требует поэлементной приёмки; наличие кода не считается доказательством полного выполнения",
-    "evidence": ""
+    "status": "региональная карта и таблица, школы, номинации и сводка проверены; CSV/JSON выгрузки сверены с API; утверждённые отчётные формы заказчика отсутствуют",
+    "evidence": "output/release/analytics-map-live.json; output/release/allocation-reports-e2e.json; output/release/reports-live-qa.json"
   },
   {
     "requirement": "1. Главная страница",
@@ -145,44 +145,44 @@
   },
   {
     "requirement": "«Арктика: что это и где она начинается?»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-025"
   },
   {
     "requirement": "«Белый медведь: хозяин Арктики»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-026"
   },
   {
     "requirement": "«Медвежьи острова: родильный дом белых медведей»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-027"
   },
   {
     "requirement": "«Хрупкий лёд: как меняется Арктика»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-028"
   },
   {
     "requirement": "«Северный морской путь: история и современность»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-029"
   },
   {
     "requirement": "«Профессии в Арктике: кто охраняет белого медведя»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-030"
   },
   {
     "requirement": "«Как школьник может помочь Арктике?»",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "опубликована статья: шесть разделов, изображение, оглавление и ссылки на источники; проверены полный HTML для индексации и четыре ширины; научная редактура заказчиком не проводилась",
+    "evidence": "frontend/src/education.js; frontend/src/education-extra.js; frontend/scripts/prerender.mjs; output/release/public-content-e2e.json",
     "id": "TZ-031"
   },
   {
@@ -560,8 +560,8 @@
   {
     "id": "TZ-094",
     "requirement": "Адаптивный дизайн (мобильные устройства — большинство школьников).",
-    "status": "частично проверено; ручной обзор всех состояний продолжается",
-    "evidence": "output/release/ux-release-checks.json:81; output/release/anti-slop/pages.json:36; role-pages.json:60"
+    "status": "проверены 18 публичных страниц на 320/390/834/1440 px: заголовки, изображения, отсутствие горизонтального переполнения; кабинеты имеют отдельные проверки; полная ручная приёмка всех состояний продолжается",
+    "evidence": "output/release/public-content-e2e.json; output/release/anti-slop/role-pages.json; frontend/test-results/roles-e2e/report.json"
   },
   {
     "requirement": "1. Автоматическая генерация сертификатов и дипломов. Нужна интеграция с генератором PDF (например, библиотека FPDF/TCPDF).",

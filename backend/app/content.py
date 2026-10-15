@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.common import audit, stage_state
+from app.auth_schemas import InputModel
 from app.config import settings
 from app.db import get_db
 from app.dependencies import require_roles
@@ -121,7 +122,7 @@ def public_stats(db: Session = Depends(get_db)):
     }
 
 
-class ContactIn(BaseModel):
+class ContactIn(InputModel):
     model_config = ConfigDict(extra="forbid")
     kind: Literal["feedback", "sponsor", "volunteer"] = "feedback"
     name: str = Field(min_length=2, max_length=200)

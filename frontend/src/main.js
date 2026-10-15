@@ -4,7 +4,7 @@ import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
 import {testEntry} from './test-entry.js';
 import {installPresence, syncPresence} from './presence.js';
-import {installContact} from './contact.js';
+import {installContact, hasContactDraft} from './contact.js';
 import {installAssistant, syncAssistant} from './assistant.js';
 import './styles.css';
 import './app.css';
@@ -207,6 +207,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
     else history.replaceState({ arcticIndex: activeHistoryIndex }, '', activeUrl);
   };
   if (!force && hasCommentDraft() && !window.confirm('Уйти со страницы? Неотправленный комментарий будет потерян.')) return stay();
+  if (!force && hasContactDraft() && !window.confirm('Уйти со страницы? Неотправленное обращение будет потеряно.')) return stay();
   if (!force && !workspace.canLeave()) return stay();
   if (!force && (!control.canLeave() || !profile.canLeave())) return stay();
   if (!force && formBusy) { toast('Подожди, завершаем сохранение.'); return stay(); }
@@ -617,7 +618,7 @@ function followHistory() {
 }
 window.addEventListener('popstate', followHistory);
 window.addEventListener('hashchange', followHistory);
-window.addEventListener('beforeunload', event => { if (hasCommentDraft() || draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (hasCommentDraft() || hasContactDraft() || draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
 setInterval(() => {
   if (!state.attempt || state.attempt.status !== 'active' || !['quiz','quiz-confirm'].includes(state.route) || state.loading) return;
   const timer = document.querySelector('#timer'); if (timer) timer.textContent = timerText(state);
