@@ -38,7 +38,7 @@ export function landing(s) {
   const news = s.content.filter(item => item.kind === 'news' && item.slug !== 'demo-materials').slice(0, 3);
   return `<div class="participant-home">
     <section class="north-cover">
-      <div class="cover-copy"><p class="cover-kicker">Школьный конкурс об Арктике</p><h1 tabindex="-1">Удивительная<br>и неизведанная<br>Арктика</h1><p class="cover-intro">Узнай, как устроена жизнь на Севере, проверь свои знания и представь собственное исследование. От первого вопроса до проекта, который увидят эксперты.</p><div class="cover-actions">${button('Пройти тестирование', go('testing'))}</div></div>
+      <div class="cover-copy"><p class="cover-kicker">Привет</p><h1 tabindex="-1">Удивительная<br>и неизведанная<br>Арктика</h1><p class="cover-intro">Узнай, как устроена жизнь на Севере, проверь свои знания и представь собственное исследование. От первого вопроса до проекта, который увидят эксперты.</p><div class="cover-actions">${button('Пройти тестирование', go('testing'))}</div></div>
       ${soundButton('hero')}<picture class="cover-bear"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/arctic-bear.webp"><img src="/assets/arctic-bear-animated.webp" width="648" height="648" alt="Белый медвежонок в голубой шапке приветствует участников"></picture><img class="cover-landscape" fetchpriority="high" src="/assets/arctic-landscape.webp" width="1672" height="941" alt="Снежные горы и льды арктического побережья">
     </section>
 
