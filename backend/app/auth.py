@@ -277,7 +277,7 @@ def register(data: RegisterInput, db: Db):
             Notification(
                 user_id=user.id,
                 title="Добро пожаловать",
-                body="Заполните профиль и подтвердите электронную почту, чтобы получать новости конкурса.",
+                body="Профиль создан. Уведомления и документы конкурса доступны в личном кабинете.",
             )
         )
         _audit(db, "auth.register", user)

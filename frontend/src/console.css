@@ -172,3 +172,5 @@ input[type=checkbox],input[type=radio] { accent-color:var(--blue); }
 @media(max-width:500px) { .header-actions>.account-button { display:flex; padding:6px; min-width:48px; min-height:48px; } .account-button .account-label { display:none; } }
 
 .user-access-details{display:grid;gap:12px;margin:24px 0}.user-access-details>div{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1.2fr);gap:16px;border-bottom:1px solid #dce6eb;padding-bottom:10px}.user-access-details dt{font-size:14px;color:#527487}.user-access-details dd{margin:0;font-size:14px;overflow-wrap:anywhere}.user-danger{margin-top:24px;border-top:1px solid #cbd9e0;padding-top:16px}.user-danger summary{cursor:pointer;color:#943b46;min-height:44px}.user-danger p{margin-bottom:16px;font-size:14px;line-height:1.6}@media(max-width:500px){.user-access-details>div{grid-template-columns:1fr;gap:6px}}
+.console-export>.form-field { flex:1; min-width:220px; }
+.console-export { align-items:flex-end; }

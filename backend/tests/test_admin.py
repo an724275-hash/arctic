@@ -172,6 +172,28 @@ def test_csv_exports_are_utf8_bom_and_neutralize_formulas(client, db, users, aut
     assert client.get(f"{API}/admin/export/users.csv", headers=auth_headers("commission")).status_code == 403
 
 
+def test_analytics_csv_matches_totals_and_grouped_counts(client, db, users, auth_headers):
+    users["participant"].school = "=FORMULA-school"
+    db.commit()
+    headers = auth_headers("admin")
+    statistics = client.get(f"{API}/admin/stats", headers=headers).json()
+    response = client.get(f"{API}/admin/export/analytics.csv", headers=headers)
+    assert response.status_code == 200
+    assert response.content.startswith(b"\xef\xbb\xbf")
+    rows = list(csv.reader(io.StringIO(response.content.decode("utf-8-sig"))))
+    assert rows[0] == ["Сформировано UTC", "Раздел", "Показатель", "Количество"]
+    totals = {row[2]: int(row[3]) for row in rows[1:] if row[1] == "Общие показатели"}
+    assert totals["Активные участники"] == statistics["participants_total"]
+    assert totals["Проекты"] == statistics["projects_total"]
+    for key, label in [("regions", "Участники по регионам"), ("schools", "Участники по учебным заведениям"), ("nominations", "Проекты по номинациям"), ("signups_daily", "Регистрации по дням")]:
+        actual = {row[2]: int(row[3]) for row in rows[1:] if row[1] == label}
+        expected = {("'" + item["label"] if item["label"].startswith("=") else item["label"]): item["count"] for item in statistics[key]}
+        assert actual == expected
+    assert len({row[0] for row in rows[1:]}) == 1
+    for role in ("participant", "teacher", "expert", "commission"):
+        assert client.get(f"{API}/admin/export/analytics.csv", headers=auth_headers(role)).status_code == 403
+
+
 def test_defenses_visible_to_owner_linked_teacher_and_assigned_expert(client, db, users, auth_headers):
     project = make_project(db, users["participant"])
     db.add(Assignment(project_id=project.id, expert_id=users["expert"].id))

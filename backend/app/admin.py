@@ -689,6 +689,31 @@ def export_analytics(db: Db, actor: Admin):
     )
 
 
+@router.get("/admin/export/analytics.csv")
+def export_analytics_csv(db: Db, actor: Admin):
+    generated_at = utcnow().isoformat()
+    data = stats(db, actor)
+    totals = {
+        "active_sessions": "Активные сессии за две минуты",
+        "users_total": "Всего аккаунтов", "active_users": "Активные аккаунты",
+        "participants_total": "Активные участники", "teachers_total": "Активные наставники",
+        "regions_total": "Регионы", "schools_total": "Учебные заведения",
+        "projects_total": "Проекты", "reviews_total": "Рецензии",
+        "quiz_attempts_total": "Попытки теста", "quiz_passed": "Успешные попытки теста",
+        "certificates_total": "Выданные документы",
+    }
+    groups = {
+        "regions": "Участники по регионам", "schools": "Участники по учебным заведениям",
+        "roles": "Аккаунты по ролям", "project_statuses": "Проекты по статусам",
+        "nominations": "Проекты по номинациям", "signups_daily": "Регистрации по дням",
+    }
+    rows = [(generated_at, "Общие показатели", label, data[key]) for key, label in totals.items()]
+    rows.extend((generated_at, title, item["label"], item["count"]) for key, title in groups.items() for item in data[key])
+    audit(db, actor.id, "admin.analytics_csv_exported", rows=len(rows))
+    db.commit()
+    return _csv_response("analytics.csv", ["Сформировано UTC", "Раздел", "Показатель", "Количество"], rows)
+
+
 @router.get("/admin/export/reviews.csv")
 def export_reviews(db: Db, actor: Admin):
     rows = db.execute(
