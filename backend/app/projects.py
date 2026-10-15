@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import tempfile
@@ -14,7 +15,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, or_, select
@@ -482,8 +483,10 @@ def list_files(project_id: str, db: Session = Depends(get_db), user: User = Depe
 @router.post("/projects/{project_id}/files", response_model=FileOut, status_code=201)
 def upload_file(
     project_id: str,
+    response: Response,
     file: UploadFile = File(...),
     kind: Literal["document", "presentation", "video"] = Form("document"),
+    upload_id: uuid.UUID | None = Form(None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -492,12 +495,21 @@ def upload_file(
     extension = Path(original_name).suffix.lower()
     if extension not in EXTENSIONS[kind]:
         raise HTTPException(422, "Для этой категории выбран неподдерживаемый формат файла")
+    existing = db.get(Upload, str(upload_id)) if upload_id else None
+    if existing and (
+        existing.project_id != project.id
+        or existing.uploaded_by != user.id
+        or existing.kind != kind
+        or existing.original_name != original_name
+    ):
+        raise HTTPException(409, "Этот идентификатор загрузки уже использован")
     root = Path(settings.uploads_dir).resolve()
     root.mkdir(parents=True, exist_ok=True)
     limit = settings.max_upload_mb * 1024 * 1024
     temporary: Path | None = None
     destination: Path | None = None
     committed = False
+    digest = hashlib.sha256()
     try:
         with tempfile.NamedTemporaryFile(dir=root, prefix=".upload-", delete=False) as output:
             temporary = Path(output.name)
@@ -510,9 +522,22 @@ def upload_file(
                 if size > limit:
                     raise HTTPException(413, f"Размер файла не должен превышать {settings.max_upload_mb} МБ")
                 output.write(chunk)
+                digest.update(chunk)
         if size == 0:
             raise HTTPException(422, "Нельзя загрузить пустой файл")
         validate_file_content(temporary, extension, limit)
+        if existing:
+            if existing.size_bytes != size:
+                raise HTTPException(409, "Повторная загрузка содержит другой файл")
+            try:
+                with storage_path(existing.stored_name).open("rb") as saved_file:
+                    saved_digest = hashlib.file_digest(saved_file, "sha256").digest()
+            except FileNotFoundError:
+                raise HTTPException(409, "Сохранённый файл недоступен. Обновите страницу") from None
+            if saved_digest != digest.digest():
+                raise HTTPException(409, "Повторная загрузка содержит другой файл")
+            response.status_code = 200
+            return existing
         stored_name = uuid.uuid4().hex + extension
         destination = storage_path(stored_name)
         os.replace(temporary, destination)
@@ -525,6 +550,8 @@ def upload_file(
             size_bytes=size,
             kind=kind,
         )
+        if upload_id:
+            upload.id = str(upload_id)
         project.updated_at = utcnow()
         db.add(upload)
         db.commit()

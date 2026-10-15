@@ -1,5 +1,6 @@
 import {installComments, loadCommentModeration, hasCommentDraft} from './comments.js';
 import {createQuizClock} from './quiz-clock.js';
+import {uploadKey} from './upload-key.js';
 import {installRegistrationTeacher, requireRegistrationTeacher} from './registration-teacher.js';
 import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
@@ -390,14 +391,14 @@ async function saveProject(form, submit = false) {
     writeRoute(routeHash('project', saved.id));
     draftDirty = Boolean(state.file || Object.values(state.materials).some(Boolean));
     if (state.file) {
-      const data = new FormData(); data.append('file', state.file); data.append('kind', 'document');
+      const data = new FormData(); data.append('file', state.file); data.append('kind', 'document'); data.append('upload_id', uploadKey(state.file));
       await request(`/projects/${saved.id}/files`, { method: 'POST', body: data });
       state.file = null;
       showUploadSaved('document');
     }
     for (const [kind, file] of Object.entries(state.materials)) {
       if (!file) continue;
-      const data = new FormData(); data.append('file', file); data.append('kind', kind);
+      const data = new FormData(); data.append('file', file); data.append('kind', kind); data.append('upload_id', uploadKey(file));
       await request(`/projects/${saved.id}/files`, { method: 'POST', body: data });
       state.materials[kind] = null;
       showUploadSaved(kind);

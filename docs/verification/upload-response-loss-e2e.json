@@ -1,0 +1,9 @@
+{
+  "localFictionalAccounts": true,
+  "firstUploadCommittedBeforeResponseLoss": true,
+  "retryReturnedExistingFile": true,
+  "retryStatus": 200,
+  "singleStoredFile": true,
+  "projectSubmitted": true,
+  "errors": []
+}
