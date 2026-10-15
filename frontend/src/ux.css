@@ -43,3 +43,8 @@
   .console-pagination span { width:100%; }
   .connection-banner { bottom:max(12px,env(safe-area-inset-bottom)); font-size:13px; }
 }
+.profile-guardian { display:grid; gap:18px; padding:20px 0; margin:8px 0; border:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.profile-guardian legend { padding:0 8px 0 0; font-weight:600; }
+.user-award { margin:20px 0; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.user-award>summary { min-height:44px; align-content:center; cursor:pointer; font-weight:600; }
+.user-award[open]>.project-form { margin-top:16px; }

@@ -158,6 +158,14 @@ export function createConsole(s,ui) {
     controls.forEach(([node])=>{node.disabled=true;});
     const message=form.querySelector('.form-message');message.textContent='Сохраняем…';
     try {
+      if(type==='user-award'){
+        const user=c.people.items.find(row=>row.id===data.user_id);
+        if(!user||!user.is_active)throw new Error('Выбери действующий аккаунт получателя.');
+        const certificate=await request('/admin/certificates',{method:'POST',body:{user_id:user.id,kind:data.kind,title:data.title.trim()}});
+        dirty=false;
+        form.outerHTML=`<div class="notice"><div><strong>Документ выдан</strong><p>${e(certificate.number)}</p><button type="button" class="link-button" data-certificate="${e(certificate.id)}">Скачать PDF</button></div></div>`;
+        ui.toast('Документ появился в кабинете получателя.');
+      }
       if(type==='user-access'){
         const user=c.people.items.find(row=>row.id===data.user_id);
         if(!user||user.id===s.user.id)throw new Error('Этот аккаунт нельзя изменять через выбранный экран.');
