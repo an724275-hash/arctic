@@ -137,9 +137,9 @@ def _fit_centered(
         pdf.drawCentredString(x, top - index * size * 1.35, line)
 
 
-def build_certificate_pdf(certificate: Certificate, user: User) -> bytes:
+def build_certificate_pdf(certificate: Certificate, user: User, mentor_name: str | None = None) -> bytes:
     return render_document(
-        certificate, user, _certificate_font(), verification_url(certificate), _fit_centered
+        certificate, user, _certificate_font(), verification_url(certificate), _fit_centered, mentor_name
     )
 
 
@@ -192,8 +192,12 @@ def download_certificate(
     owner = db.get(User, certificate.user_id)
     if owner is None:
         raise HTTPException(status_code=404, detail="Сертификат не найден")
+    mentor_name = db.scalar(
+        select(User.full_name).join(TeacherLink, TeacherLink.teacher_id == User.id)
+        .where(TeacherLink.participant_id == owner.id, TeacherLink.status == "accepted")
+    ) if not certificate.mentor_name and certificate.kind != "teacher_thanks" else None
     return Response(
-        content=build_certificate_pdf(certificate, owner),
+        content=build_certificate_pdf(certificate, owner, mentor_name),
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="certificate-{certificate.number}.pdf"',

@@ -48,7 +48,7 @@ def draw_logo(pdf, x, y):
     pdf.restoreState()
 
 
-def render_document(certificate, user, font, verify_url, fit):
+def render_document(certificate, user, font, verify_url, fit, mentor_name=None):
     output = io.BytesIO()
     width, height = landscape(A4)
     pdf = canvas.Canvas(output, pagesize=(width, height), pageCompression=1)
@@ -119,7 +119,7 @@ def render_document(certificate, user, font, verify_url, fit):
     fit(pdf, description, font, width / 2, 257, 640, 35, 12)
     pdf.setFillColor(HexColor("#183847"))
     fit(pdf, certificate.title, font, width / 2, 223, 620, 45, 17)
-    mentor = getattr(certificate, "mentor_name", None)
+    mentor = getattr(certificate, "mentor_name", None) or mentor_name
     if mentor and certificate.kind != "teacher_thanks":
         pdf.setFillColor(HexColor("#496B7C"))
         fit(pdf, "Наставник: " + mentor, font, width / 2, 166, 530, 30, 11)

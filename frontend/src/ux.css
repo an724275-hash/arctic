@@ -48,3 +48,9 @@
 .user-award { margin:20px 0; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .user-award>summary { min-height:44px; align-content:center; cursor:pointer; font-weight:600; }
 .user-award[open]>.project-form { margin-top:16px; }
+.registration-teacher { display:grid; gap:16px; min-width:0; margin:12px 0; padding:22px 0; border:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.registration-teacher legend { padding:0 8px 0 0; font-weight:600; }
+.registration-teacher [data-teacher-picker] { display:grid; gap:16px; }
+.registration-teacher [data-teacher-picker][hidden] { display:none; }
+.selected-teacher { padding:16px; background:var(--ice); border-radius:6px; }
+.selected-teacher p { margin:6px 0 0; color:var(--muted); font-size:14px; }

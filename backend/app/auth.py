@@ -226,6 +226,15 @@ def register(data: RegisterInput, db: Db):
     normalized_email = _email(data.email)
     if db.scalar(select(User.id).where(User.email == normalized_email)):
         raise HTTPException(status_code=409, detail="Аккаунт с такой почтой уже существует")
+    invitation = None
+    teacher = None
+    if data.role == "participant":
+        invitation = _action(db, data.mentor_token, "mentor_link") if data.mentor_token else None
+        teacher = db.scalar(
+            select(User).where(User.id == (invitation.user_id if invitation else data.teacher_id)).with_for_update()
+        )
+        if not teacher or teacher.role != "teacher" or not teacher.is_active:
+            raise HTTPException(status_code=422, detail="Выберите действующего преподавателя")
     user = User(
         email=normalized_email,
         hashed_password=hash_password(data.password),
@@ -249,6 +258,12 @@ def register(data: RegisterInput, db: Db):
     db.add(user)
     try:
         db.flush()
+        if teacher:
+            db.add(TeacherLink(participant_id=user.id, teacher_id=teacher.id, status="accepted"))
+            if invitation:
+                invitation.used_at = utcnow()
+            db.add(Notification(user_id=teacher.id, title="Новый ученик", body=f"{user.full_name} выбрал вас наставником."))
+            _audit(db, "teacher.registration_linked", user, teacher.id)
         _queue_action(
             db,
             user,
@@ -455,6 +470,23 @@ def update_profile(data: ProfileInput, db: Db, user: CurrentUser):
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.get("/public/teachers", response_model=list[TeacherOutput])
+def teacher_directory(db: Db, q: str = Query(min_length=2, max_length=100)):
+    term = q.strip()
+    if len(term) < 2:
+        return []
+    pattern = "%" + term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    return db.scalars(
+        select(User)
+        .where(
+            User.role == "teacher", User.is_active.is_(True),
+            User.full_name.ilike(pattern, escape="\\") | User.school.ilike(pattern, escape="\\"),
+        )
+        .order_by(User.full_name, User.id)
+        .limit(20)
+    ).all()
 
 
 @router.get("/teachers", response_model=list[TeacherOutput])

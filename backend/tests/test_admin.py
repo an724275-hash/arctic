@@ -128,7 +128,7 @@ def test_nomination_in_use_is_disabled_and_criteria_validation(client, db, users
     assert criterion_id not in {item["id"] for item in client.get(f"{API}/criteria").json()}
 
 
-def test_stage_rejects_naive_or_inverted_dates_and_closed_registration(client, auth_headers):
+def test_stage_rejects_naive_or_inverted_dates_and_closed_registration(client, auth_headers, users):
     headers = auth_headers("admin")
     data = {"title": "Регистрация", "starts_at": "2026-10-15T10:00:00Z", "ends_at": "2026-10-14T10:00:00Z"}
     assert client.put(f"{API}/admin/stages/registration", headers=headers, json=data).status_code == 422
@@ -146,6 +146,8 @@ def test_stage_rejects_naive_or_inverted_dates_and_closed_registration(client, a
         f"{API}/auth/register",
         json={
             "email": "closed@example.com",
+            "teacher_id": users["teacher"].id,
+            "teacher_consent": True,
             "full_name": "Поздний участник",
             "password": "StrongPassword123!",
             "role": "participant",

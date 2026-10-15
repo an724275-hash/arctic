@@ -10,7 +10,7 @@ from app.security import token_digest, verify_password
 API = "/api/v1"
 
 
-def registration(**overrides):
+def registration(users=None, **overrides):
     data = {
         "email": "new.participant@example.com",
         "password": "StrongPassword123!",
@@ -22,6 +22,9 @@ def registration(**overrides):
         "consent": True,
     }
     data.update(overrides)
+    if users and data["role"] == "participant":
+        data.setdefault("teacher_id", users["teacher"].id)
+        data.setdefault("teacher_consent", True)
     return data
 
 
@@ -45,8 +48,8 @@ def test_public_registration_cannot_assign_privileged_role(client, role):
     assert response.status_code == 422
 
 
-def test_register_hashes_password_and_records_consent(client, db):
-    response = client.post(f"{API}/auth/register", json=registration(email="NEW.Participant@example.com"))
+def test_register_hashes_password_and_records_consent(client, db, users):
+    response = client.post(f"{API}/auth/register", json=registration(users, email="NEW.Participant@example.com"))
     assert response.status_code == 201, response.text
     payload = response.json()
     assert payload["user"]["email"] == "new.participant@example.com"
@@ -59,13 +62,13 @@ def test_register_hashes_password_and_records_consent(client, db):
     persisted = db.scalar(select(RefreshToken).where(RefreshToken.user_id == user.id))
     assert persisted.token_hash == token_digest(payload["refresh_token"])
     assert persisted.token_hash != payload["refresh_token"]
-    duplicate = client.post(f"{API}/auth/register", json=registration())
+    duplicate = client.post(f"{API}/auth/register", json=registration(users))
     assert duplicate.status_code == 409
 
 
-def test_minor_requires_guardian_consent_and_records_it(client, db):
+def test_minor_requires_guardian_consent_and_records_it(client, db, users):
     birth_date = f"{utcnow().year - 15}-01-01"
-    data = registration(birth_date=birth_date)
+    data = registration(users, birth_date=birth_date)
     assert client.post(f"{API}/auth/register", json=data).status_code == 422
     data.update(
         guardian_name="Законный представитель", guardian_email="guardian@example.com", guardian_consent=True
@@ -210,8 +213,8 @@ def test_expired_password_reset_is_rejected(client, db, users):
     )
 
 
-def test_email_confirmation_is_single_use(client, db):
-    response = client.post(f"{API}/auth/register", json=registration())
+def test_email_confirmation_is_single_use(client, db, users):
+    response = client.post(f"{API}/auth/register", json=registration(users))
     assert response.status_code == 201
     raw_token = outbox_token(db, "Подтвердите электронную почту")
     assert client.post(f"{API}/auth/verify-email", json={"token": raw_token}).status_code == 200

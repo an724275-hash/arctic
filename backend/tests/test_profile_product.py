@@ -5,10 +5,10 @@ from test_auth import registration
 API = "/api/v1"
 
 
-def test_registration_city_and_school_grades(client):
+def test_registration_city_and_school_grades(client, users):
     result = client.post(
         API + "/auth/register",
-        json=registration(city="Нерюнгри", region="Республика Саха (Якутия)", grade=11),
+        json=registration(users, city="Нерюнгри", region="Республика Саха (Якутия)", grade=11),
     )
     assert result.status_code == 201
     assert result.json()["user"]["city"] == "Нерюнгри"

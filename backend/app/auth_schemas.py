@@ -51,6 +51,9 @@ class RegisterInput(InputModel):
     guardian_email: EmailStr | None = None
     consent: bool
     guardian_consent: bool = False
+    teacher_id: str | None = Field(default=None, min_length=36, max_length=36)
+    mentor_token: str | None = Field(default=None, min_length=32, max_length=128)
+    teacher_consent: bool = False
 
     _password = field_validator("password")(validate_password)
 
@@ -60,6 +63,13 @@ class RegisterInput(InputModel):
             raise ValueError("Необходимо согласие на обработку персональных данных")
         if self.role == "participant" and self.birth_date is None:
             raise ValueError("Укажите дату рождения участника")
+        if self.role == "participant":
+            if bool(self.teacher_id) == bool(self.mentor_token):
+                raise ValueError("Выберите преподавателя или используйте его личную ссылку")
+            if not self.teacher_consent:
+                raise ValueError("Подтвердите привязку к преподавателю")
+        elif self.teacher_id or self.mentor_token:
+            raise ValueError("Наставник выбирается только для участника")
         if self.birth_date:
             age = age_on_today(self.birth_date)
             if age < 6 or age > 120:

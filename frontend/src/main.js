@@ -1,3 +1,4 @@
+import {installRegistrationTeacher, requireRegistrationTeacher} from './registration-teacher.js';
 import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
 import {testEntry} from './test-entry.js';
@@ -231,7 +232,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
       if (workspace.isRoute(next)) await workspace.load(next, id);
       if(consoleRoutes.has(next)) await control.load(next);
       if(next==='profile') await profile.load();
-      if(next==='teacher-invite')await mentor.load();
+      if(next==='teacher-invite'||next==='register'&&state.mentorToken)await mentor.load();
       if(next==='awards') await loadDashboard();
       if (next === 'testing') {
         state.attempts = await request('/quiz/attempts');
@@ -390,6 +391,7 @@ async function withForm(form, action) {
   finally { formBusy = false; controls.forEach((el,i) => el.disabled = disabled[i]); form.removeAttribute('aria-busy'); }
 }
 async function authenticate(form, registration) {
+  if (registration && !requireRegistrationTeacher(form)) return;
   if (!form.reportValidity() || formBusy) return;
   const data = Object.fromEntries(new FormData(form));
   let payload = { email: data.email, password: data.password };
@@ -398,6 +400,7 @@ async function authenticate(form, registration) {
     grade: data.grade ? Number(data.grade) : null, school: data.school || null, region: data.region || null,city:data.city||null,
     guardian_name: data.guardian_name || null, guardian_email: data.guardian_email || null,
     guardian_consent: data.guardian_consent === 'on', consent: data.consent === 'on',
+    teacher_id: data.teacher_id || null, mentor_token: data.mentor_token || null, teacher_consent: data.teacher_consent === 'on',
   };
   let authenticated = false;
   await withForm(form, async () => {
@@ -407,6 +410,7 @@ async function authenticate(form, registration) {
     authenticated = true;
   });
   if (!authenticated) return;
+  if (registration) mentor.clear();
   await navigate(state.mentorToken?'teacher-invite':pendingRoute, { force: true });
   pendingRoute = 'dashboard';
   if (registration) {
@@ -626,6 +630,7 @@ async function boot() {
   }
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
+installRegistrationTeacher();
 installInteractionMotion();
 installNavigationPolish();
 installAssistant(() => state.route);
