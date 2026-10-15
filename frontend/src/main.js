@@ -1,4 +1,5 @@
 import {installComments, loadCommentModeration, hasCommentDraft} from './comments.js';
+import {createQuizClock} from './quiz-clock.js';
 import {installRegistrationTeacher, requireRegistrationTeacher} from './registration-teacher.js';
 import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
@@ -48,7 +49,7 @@ let answerSave = Promise.resolve();
 let answerRevision = 0;
 let finishPending = false;
 let formBusy = false;
-let timerFailureAt = 0;
+let timerFailureAt = -Infinity;
 let draftDirty = false;
 let activeUrl = `${location.pathname}${location.search}${location.hash}`;
 let activeHistoryIndex = Number.isInteger(history.state?.arcticIndex) ? history.state.arcticIndex : 0;
@@ -177,10 +178,17 @@ async function loadDashboard() {
   if(participant)state.mentorConnection=await request('/teachers/link');
   await profile.photo();
 }
+const quizClock = createQuizClock();
+async function requestAttempt(path, options) {
+  const started = performance.now();
+  const attempt = await request(path, options);
+  quizClock.sync(attempt, started);
+  return attempt;
+}
 function setAttempt(attempt, resetQuestion = false) {
   state.attempt = attempt;
   state.answers = structuredClone(attempt.answers);
-  state.deadline = Date.now() + attempt.seconds_remaining * 1000;
+  state.deadline = quizClock.deadline;
   state.answerError = '';
   if (resetQuestion) state.question = 0;
   state.question = Math.min(state.question, attempt.questions.length - 1);
@@ -251,7 +259,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
           attemptId = state.attempts[0]?.id;
         }
         if (!attemptId) { await navigate('dashboard', { force: true }); return; }
-        setAttempt(await request(`/quiz/attempts/${attemptId}`), Boolean(id));
+        setAttempt(await requestAttempt(`/quiz/attempts/${attemptId}`), Boolean(id));
         state.route = state.attempt.status !== 'active' ? 'result' : next === 'result' ? 'quiz' : next;
       }
       if (next === 'project' || next === 'submitted') {
@@ -279,7 +287,7 @@ async function startQuiz() {
   if (!state.user) return navigate('login');
   state.loading = true; state.error = ''; render();
   try {
-    setAttempt(await request('/quiz/attempts', { method: 'POST' }), true);
+    setAttempt(await requestAttempt('/quiz/attempts', { method: 'POST' }), true);
     await navigate(state.attempt.status === 'active' ? 'quiz' : 'result', { reload: false, force: true });
   } catch (error) { state.loading = false; render(); toast(error.message); }
 }
@@ -297,10 +305,10 @@ function saveAnswers() {
       do {
         revision = answerRevision;
         const payload = structuredClone(state.answers);
-        const attempt = await request(`/quiz/attempts/${attemptId}/answers`, { method: 'PATCH', body: { answers: payload } });
+        const attempt = await requestAttempt(`/quiz/attempts/${attemptId}/answers`, { method: 'PATCH', body: { answers: payload } });
         if (state.attempt?.id !== attemptId) return;
         state.attempt = attempt;
-        state.deadline = Date.now() + attempt.seconds_remaining * 1000;
+        state.deadline = quizClock.deadline;
         if (attempt.status !== 'active') {
           setAttempt(attempt); state.route = 'result'; render(); return;
         }
@@ -346,11 +354,11 @@ async function finishQuiz(expired = false) {
   await answerSave;
   state.loading = true; render();
   try {
-    setAttempt(await request(`/quiz/attempts/${state.attempt.id}/submit`, { method: 'POST', body: { answers: state.answers } }));
+    setAttempt(await requestAttempt(`/quiz/attempts/${state.attempt.id}/submit`, { method: 'POST', body: { answers: state.answers } }));
     await navigate('result', { reload: false, force: true });
     playCue('complete');
     if (expired) toast('Время закончилось. Сохранённые ответы учтены.');
-  } catch (error) { state.loading = false; timerFailureAt = Date.now(); render(); toast(error.message); }
+  } catch (error) { state.loading = false; timerFailureAt = performance.now(); render(); toast(error.message); }
   finally { finishPending = false; }
 }
 async function saveProject(form, submit = false) {
@@ -619,10 +627,23 @@ function followHistory() {
 window.addEventListener('popstate', followHistory);
 window.addEventListener('hashchange', followHistory);
 window.addEventListener('beforeunload', event => { if (hasCommentDraft() || hasContactDraft() || draftDirty || state.saving || state.answerError || workspace.dirty || workspace.busy || control.dirty || control.busy || profile.dirty || profile.busy) { event.preventDefault(); event.returnValue = ''; } });
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || state.saving || finishPending || state.loading || state.attempt?.status !== 'active' || !['quiz','quiz-confirm'].includes(state.route)) return;
+  const id = state.attempt.id;
+  try {
+    const attempt = await requestAttempt(`/quiz/attempts/${id}`);
+    if (state.attempt?.id !== id || !['quiz','quiz-confirm'].includes(state.route)) return;
+    state.deadline = quizClock.deadline;
+    if (attempt.status !== 'active') {
+      setAttempt(attempt);
+      await navigate('result', {reload:false,force:true});
+    }
+  } catch { /* повторим при сохранении */ }
+});
 setInterval(() => {
   if (!state.attempt || state.attempt.status !== 'active' || !['quiz','quiz-confirm'].includes(state.route) || state.loading) return;
   const timer = document.querySelector('#timer'); if (timer) timer.textContent = timerText(state);
-  if (Date.now() >= state.deadline && Date.now()-timerFailureAt > 15000) void finishQuiz(true);
+  if (performance.now() >= state.deadline && performance.now()-timerFailureAt > 15000) void finishQuiz(true);
 }, 1000);
 
 async function boot() {

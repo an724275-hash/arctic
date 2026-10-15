@@ -1,0 +1,18 @@
+{
+  "localFictionalAccounts": true,
+  "questionCount": 15,
+  "noAnswersExposed": true,
+  "slowSaveDoesNotExtendTime": true,
+  "deviceClockChange": true,
+  "resumeKeepsAnswer": true,
+  "serverGraded": 100,
+  "certificatePdfDownloaded": true,
+  "expiryOnVisibilitySync": true,
+  "widths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "errors": []
+}

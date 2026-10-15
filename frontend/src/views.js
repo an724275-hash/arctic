@@ -144,7 +144,7 @@ export function dashboard(s) {
 }
 
 export function timerText(s) {
-  const seconds = Math.max(0, Math.ceil((s.deadline - Date.now()) / 1000));
+  const seconds = Math.max(0, Math.ceil((s.deadline - performance.now()) / 1000));
   return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
 }
 export function quiz(s) {
