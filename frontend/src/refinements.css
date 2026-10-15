@@ -79,3 +79,19 @@ dialog::backdrop { background:rgba(24,56,71,.38); }
   .shell .mobile-nav .icon { width:17px; height:17px; }
   html { scroll-padding-top:148px; }
 }
+
+/* документы */
+.legal-page section { margin-block: 32px; }
+.legal-page p,.legal-page li { line-height: 1.7; overflow-wrap: anywhere; }
+.legal-page li + li { margin-top: 10px; }
+.legal-links { display: flex; flex-wrap: wrap; gap: 12px 24px; padding-block: 20px; border-block: 1px solid #d5e4ed; }
+.legal-links [aria-current] { font-weight: 700; }
+.cookie-panel { position: fixed; z-index: 10000; left: 20px; bottom: 20px; width: min(480px,calc(100vw - 40px)); max-height: calc(100dvh - 40px); overflow: auto; padding: 24px; border: 1px solid #c4d9e6; border-radius: 12px; background: #fff; color: #153c53; box-shadow: 0 12px 40px #153c5329; }
+.cookie-panel[hidden] { display: none; }
+.cookie-panel h2 { font-size: 20px; margin: 0 0 12px; }
+.cookie-panel p { font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+.cookie-panel > a { font-size: 14px; text-decoration: underline; }
+.cookie-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.cookie-actions .button { flex: 1 1 180px; min-height: 44px; padding: 12px; font-size: 14px; white-space: normal; }
+.footer-links { flex-wrap: wrap; }
+@media (max-width: 540px) { .cookie-panel { left: 12px; bottom: 12px; width: calc(100vw - 24px); padding: 20px; } }

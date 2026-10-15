@@ -1,3 +1,4 @@
+import {activityAllowed} from './legal.js';
 import {request} from './api.js';
 
 let latest;
@@ -23,14 +24,15 @@ export function syncPresence() {
 }
 
 async function heartbeat() {
-  if (pending || document.hidden || !navigator.onLine) return;
+  if (!activityAllowed() || pending || document.hidden || !navigator.onLine) return;
+  if (!sessionId) makeSession();
   if (Date.now() - refreshedAt < 45000) { syncPresence(); return; }
   pending = true;
   try {
     const reply = await request('/public/presence', {
       method: 'POST', auth: false, body: {session_id: sessionId},
     });
-    if (Number.isInteger(reply.active_sessions) && reply.active_sessions >= 0) {
+    if (activityAllowed() && Number.isInteger(reply.active_sessions) && reply.active_sessions >= 0) {
       latest = reply.active_sessions;
       refreshedAt = Date.now();
     }
@@ -38,7 +40,7 @@ async function heartbeat() {
   finally { pending = false; syncPresence(); }
 }
 
-export function installPresence() {
+function makeSession() {
   try {
     sessionId = sessionStorage.getItem('arctic-presence');
     if (!/^[0-9a-f-]{36}$/i.test(sessionId || '')) {
@@ -46,6 +48,19 @@ export function installPresence() {
       sessionStorage.setItem('arctic-presence', sessionId);
     }
   } catch { sessionId = crypto.randomUUID(); }
+}
+
+export function installPresence() {
+  window.addEventListener('arctic-privacy-change', () => {
+    if (!activityAllowed()) {
+      latest=undefined; refreshedAt=0; sessionId=undefined;
+      try { sessionStorage.removeItem('arctic-presence'); } catch { /* без хранилища */ }
+      syncPresence();
+    } else void heartbeat();
+  });
+  if (!activityAllowed()) {
+    try { sessionStorage.removeItem('arctic-presence'); } catch { /* без хранилища */ }
+  }
   void heartbeat();
   setInterval(() => void heartbeat(), 60000);
   document.addEventListener('visibilitychange', () => void heartbeat());

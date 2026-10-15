@@ -10,7 +10,7 @@ function assistantPanel() {
     <form id="assistant-form"><label class="assistant-input-label" for="assistant-question">Сообщение</label><textarea id="assistant-question" name="question" rows="2" minlength="3" maxlength="1000" required placeholder="Напиши свой вопрос…"></textarea>
     <div class="assistant-compose-actions"><button type="button" class="link-button assistant-clear">Новый разговор</button><button class="button" type="submit">Отправить ${icon('arrow')}</button></div>
     <details class="assistant-privacy"><summary>Перед отправкой</summary><p>Не отправляй личные данные. Ответы могут содержать ошибки — проверяй факты. Во время теста помощник недоступен.</p></details>
-    <label class="assistant-consent"><input name="consent" type="checkbox" required><span>Разрешаю отправлять сообщения беседы в GigaChat</span></label></form></section>`;
+    <label class="assistant-consent"><input name="consent" type="checkbox" required><span>Разрешаю отправлять сообщения беседы в GigaChat. <a href="/privacy" target="_blank" rel="noopener">Обработка данных</a></span></label></form></section>`;
 }
 
 let widget;

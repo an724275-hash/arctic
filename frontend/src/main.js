@@ -1,3 +1,4 @@
+import {legalViews, installPrivacy} from './legal.js';
 import {installComments, loadCommentModeration, hasCommentDraft} from './comments.js';
 import {createQuizClock} from './quiz-clock.js';
 import {uploadKey} from './upload-key.js';
@@ -30,7 +31,7 @@ import {mentorView,createMentor} from './mentor.js';
 import './layout.css';
 import './refinements.css';
 
-const routeViews = { ...views, ...roleViews, ...publicViews, ...consoleViews, testing:testEntry,profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
+const routeViews = { ...legalViews, ...views, ...roleViews, ...publicViews, ...consoleViews, testing:testEntry,profile:profileView,awards:awardsView,news:newsView,preparation:preparationView,'teacher-invite':mentorView };
 
 const app = document.querySelector('#app');
 const dialog = document.querySelector('#dialog');
@@ -688,6 +689,7 @@ installInteractionMotion();
 installNavigationPolish();
 installAssistant(() => state.route);
 installContact();
+installPrivacy();
 installPresence();
 void boot();
 
