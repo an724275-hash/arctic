@@ -13,6 +13,11 @@ function icon(name, className = 'icon') {
     menu: '<path d="M5 7h14M5 12h14M5 17h14"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/>',
     home: '<path d="m3 10 9-7 9 7v11H3V10Zm6 11v-7h6v7"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',
+    users: '<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v2"/>',
+    message: '<path d="M21 11a9 9 0 0 1-9 9H4l-2 2V11a9 9 0 0 1 19 0ZM7 9h10M7 13h7"/>',
+    bell: '<path d="M18 8a6 6 0 0 0-12 0v6l-2 3h16l-2-3V8Zm-9 12a3 3 0 0 0 6 0"/>',
+    settings: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--paper)"/><circle cx="15" cy="17" r="3" fill="var(--paper)"/>',
     leaf: '<path d="M5 19C-1 5 11 2 21 3c0 11-6 20-16 16Zm0 0L16 8"/>',
     shield: '<path d="m12 2 8 4v7c0 5-8 9-8 9s-8-4-8-9V6l8-4Z"/><path d="m8 12 3 3 5-6"/>',
   };
