@@ -1,0 +1,17 @@
+{
+  "localFictionalAccounts": true,
+  "unchangedStageTimeRoundtrip": true,
+  "yakutskFormTime": true,
+  "moscowFormTime": true,
+  "updatedExistingMeeting": true,
+  "oneMeeting": true,
+  "participantAndTeacherSeeUpdate": true,
+  "testConferenceUrls": true,
+  "widths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "errors": []
+}

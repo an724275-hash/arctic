@@ -294,8 +294,9 @@ export function createWorkspace(state, ui) {
       if (form.id === 'defense-form') {
         const starts = new Date(String(data.get('starts_at')));
         if (!Number.isFinite(starts.valueOf())) throw new Error('Укажи корректную дату и время защиты.');
-        await request('/admin/defenses', { method:'POST', body:{ project_id:w.project.id, starts_at:starts.toISOString(), join_url:data.get('join_url'), description:String(data.get('description') || '') } });
-        await reloadAfter('Защита назначена. Участник увидит дату и ссылку в своём кабинете.');
+        const current=w.defenses.find(item=>item.project_id===w.project.id);
+        await request(current?`/admin/defenses/${current.id}`:'/admin/defenses', { method:current?'PUT':'POST', body:{ project_id:w.project.id, starts_at:starts.toISOString(), join_url:data.get('join_url'), description:String(data.get('description') || '') } });
+        await reloadAfter(current?'Дата и ссылка защиты обновлены.':'Защита назначена. Участник увидит дату и ссылку в своём кабинете.');
       }
     }, form);
     return true;

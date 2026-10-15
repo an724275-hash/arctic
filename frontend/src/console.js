@@ -1,4 +1,5 @@
 import {contactInbox,loadContactInbox} from './contact-inbox.js';
+import {localDateTime as localDate} from './datetime.js';
 import {commentModerationView} from './comments.js';
 import {regionMap} from './region-map.js';
 import {userManagementForm} from './user-management.js';
@@ -39,7 +40,6 @@ function overview(s) {
 function field(name,label,value='',type='text',extra='') {
   return `<div class="form-field"><label for="setting-${name}">${label}</label><input id="setting-${name}" name="${name}" type="${type}" value="${e(value)}" ${extra}></div>`;
 }
-const localDate=value=>value ? new Date(new Date(value).getTime()-new Date(value).getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
 function settings(s) {
   const c=s.console,tab=c.tab;
   if(tab==='testing')return testingSettings(s);

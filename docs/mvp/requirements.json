@@ -344,8 +344,8 @@
   {
     "id": "TZ-058",
     "requirement": "Расписание ВКС-защиты с персональной ссылкой.",
-    "status": "назначение даты и персональной ссылки, показ ученику и наставнику проверены; внешняя Zoom/Webinar интеграция не подключена",
-    "evidence": "frontend/test-results/roles-e2e/report.json: назначение через UI и просмотр; тестовая ссылка example.com, реальная конференция не проверялась"
+    "status": "назначение и редактирование даты/персональной ссылки через UI проверены; одна запись видна ученику и наставнику, время проверено в Якутске и Москве; внешняя Zoom/Webinar интеграция не подключена",
+    "evidence": "docs/verification/defense-reschedule-e2e.json; backend/tests/test_defense_update.py; frontend/tests/datetime.test.js"
   },
   {
     "id": "TZ-059",

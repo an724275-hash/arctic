@@ -817,11 +817,11 @@ def _save_defense(data, db, actor, item_id=None):
     db.add(
         Notification(
             user_id=project.user_id,
-            title="Назначена защита проекта",
-            body=f"Защита «{project.title}»: {data.starts_at.isoformat()}. Ссылка доступна в личном кабинете.",
+            title="Обновлена защита проекта" if item_id else "Назначена защита проекта",
+            body=f"Время и ссылка защиты «{project.title}» доступны в личном кабинете.",
         )
     )
-    audit(db, actor.id, "admin.defense_scheduled", defense.id)
+    audit(db, actor.id, "admin.defense_updated" if item_id else "admin.defense_scheduled", defense.id)
     db.commit()
     return defense
 
