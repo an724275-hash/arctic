@@ -17,7 +17,7 @@ from xml.etree import ElementTree
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -189,12 +189,26 @@ def active_nomination(db: Session, nomination_id: str) -> Nomination:
     return nomination
 
 
+def search_projects(stmt, query: str):
+    term = query.strip()
+    if term:
+        stmt = stmt.where(
+            or_(
+                Project.title.icontains(term, autoescape=True),
+                Project.abstract.icontains(term, autoescape=True),
+            )
+        )
+    return stmt
+
+
 @router.get("/projects", response_model=list[ProjectOut])
 def list_projects(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=200),
+    q: str = Query(default="", max_length=200),
+    status: Literal["draft", "submitted", "admitted", "rejected", "reviewing", "evaluated"] | None = None,
 ):
     stmt = select(Project)
     if user.role == "participant":
@@ -210,6 +224,9 @@ def list_projects(
         stmt = stmt.where(Project.id.in_(assigned))
     elif user.role not in ("admin", "commission"):
         raise HTTPException(403, "Недостаточно прав")
+    stmt = search_projects(stmt, q)
+    if status:
+        stmt = stmt.where(Project.status == status)
     return list(db.scalars(stmt.order_by(Project.created_at.desc(), Project.id).offset(offset).limit(limit)))
 
 

@@ -14,11 +14,8 @@ function workspaceNav(s) {
 
 function projectRows(s) {
   const w = s.work;
-  const query = w.query.trim().toLocaleLowerCase('ru-RU');
-  let rows = s.user.role === 'expert' ? w.assignments.map(a => ({ ...a.project, assignment: a })) : w.projects;
-  if (w.status) rows = rows.filter(p => w.status === 'awaiting' ? p.assignment && !p.assignment.review_submitted : w.status === 'completed' ? p.assignment?.review_submitted : p.status === w.status);
-  if (query) rows = rows.filter(p => `${p.title} ${p.abstract}`.toLocaleLowerCase('ru-RU').includes(query));
-  if (!rows.length) return `<tr><td colspan="4"><div class="role-empty"><h3>${w.projects.length || w.assignments.length ? 'Работы не найдены' : s.user.role === 'expert' ? 'Назначений пока нет' : 'Работ пока нет'}</h3><p>${w.projects.length || w.assignments.length ? 'Попробуй другой запрос или статус.' : 'Новые работы появятся здесь.'}</p></div></td></tr>`;
+  const rows = s.user.role === 'expert' ? w.assignments.map(a => ({ ...a.project, assignment: a })) : w.projects;
+  if (!rows.length) return `<tr><td colspan="4"><div class="role-empty"><h3>${w.query || w.status ? 'Работы не найдены' : s.user.role === 'expert' ? 'Назначений пока нет' : 'Работ пока нет'}</h3><p>${w.query || w.status ? 'Попробуй другой запрос или статус.' : 'Новые работы появятся здесь.'}</p></div></td></tr>`;
   return rows.map(p => `<tr class="work-row">
     <td class="work-row-title"><h3>${e(p.title)}</h3><div class="work-row-meta"><span>${e(nomination(s,p.nomination_id))}</span>${p.participant_name ? `<span>${e(p.participant_name)}</span>` : ''}</div></td>
     <td class="work-row-status">${p.reviews_released ? '<span class="status success">Опубликовано</span>' : status(p)}${p.assignment?.review_submitted ? `<span class="role-small-note">Твоя оценка: ${Number(p.assignment.own_review.weighted_score).toFixed(2)} / 100</span>` : ''}</td>
@@ -34,16 +31,17 @@ export function workspace(s) {
   const title = expert ? 'Мои назначения' : teacher ? 'Мои участники' : 'Работы конкурса';
   const students = teacher ? `<section class="panel mentor-students"><h2>Участники</h2>${w.students.length ? `<div class="student-list">${w.students.map(student => `<article><span class="student-avatar">${e(student.full_name.charAt(0))}</span><div><h3>${e(student.full_name)}</h3><p>${e([student.school, student.grade ? `${student.grade} класс` : '', student.region].filter(Boolean).join(' · '))}</p></div></article>`).join('')}</div>` : '<p class="role-empty">Нет подтверждённых участников.</p>'}${w.moreStudents ? button('Показать ещё участников', action('more-students'), 'secondary small') : ''}</section>` : '';
   return `<div class="account-line"><span>${e(s.user.full_name)}</span><span>${e(roleNames[s.user.role])}</span></div>
-    ${heading(title, expert ? 'Здесь находятся исследования, назначенные тебе для экспертизы. Изучи описание и файлы, выставь оценки по каждому критерию и подготовь комментарий. Отправленная рецензия становится окончательной; участник увидит её после публикации организатором.' : teacher ? 'Следи за работами связанных с тобой участников и помогай им с подготовкой исследования. В кабинете видны данные учеников, проекты и опубликованные результаты. Отправку своей работы участник выполняет из личного аккаунта.' : 'Проверяй поступившие заявки, фиксируй замечания, допускай работы и назначай экспертов. После завершения экспертизы проверь результаты и опубликуй рецензии для участников. Фильтры помогают найти работы по теме и этапу проверки.', expert ? 'book' : 'compass')}${workspaceNav(s)}
+    ${heading(title, expert ? 'Открой назначенную работу, изучи материалы и выставь оценки. Отправленную рецензию изменить нельзя.' : teacher ? 'Здесь твои ученики, их работы и результаты. Помогай с подготовкой; тест и отправку проекта ученик выполняет сам.' : s.user.role === 'commission' ? 'Просматривай работы и результаты экспертизы. Комиссия не изменяет заявки и оценки.' : 'Проверяй заявки, возвращай на доработку или допускай к экспертизе. После оценок опубликуй результаты.', expert ? 'book' : 'compass')}${workspaceNav(s)}
     ${w.notice ? `<div class="notice" role="status"><p>${e(w.notice)}</p></div>` : ''}
     ${w.stats ? `<div class="role-stats"><div><strong>${w.stats.participants_total}</strong><span>участников</span></div><div><strong>${w.stats.projects_total}</strong><span>проектов</span></div><div><strong>${w.stats.reviews_total}</strong><span>рецензий</span></div><div><strong>${w.stats.certificates_total}</strong><span>сертификатов</span></div></div>` : ''}
     ${students}
     <section class="panel work-list">${teacher ? '<h2>Работы участников</h2>' : ''}
       <form id="work-filter-form" class="work-filters">
-        <div class="form-field"><label for="work-query">Поиск по загруженным работам</label><input id="work-query" name="query" type="search" maxlength="200" value="${e(w.query)}" placeholder="Название или тема"></div>
+        <div class="form-field"><label for="work-query">Поиск работ</label><input id="work-query" name="query" type="search" maxlength="200" value="${e(w.query)}" placeholder="Название или тема"></div>
         <div class="form-field"><label for="work-status">Статус</label><select id="work-status" name="status"><option value="">Все статусы</option>${(expert ? [['awaiting','Ждут моей оценки'],['completed','Я уже оценил']] : Object.entries(projectStatusNames)).map(([key,label]) => `<option value="${key}" ${w.status === key ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
         <button class="button secondary small" type="submit">Найти</button>
       </form>
+      <p class="sr-only" role="status">Показано работ: ${expert ? w.assignments.length : w.projects.length}${w.hasMore ? '. Можно загрузить ещё.' : '.'}</p>
       <table class="work-table"><thead><tr><th scope="col">Исследование</th><th scope="col">Статус</th><th scope="col">Подано</th><th scope="col"><span class="sr-only">Действия</span></th></tr></thead><tbody id="work-rows">${projectRows(s)}</tbody></table>
       ${w.hasMore ? `<div class="work-list-more">${button('Загрузить ещё работы', action('more-projects'), 'secondary')}</div>` : ''}
     </section>`;

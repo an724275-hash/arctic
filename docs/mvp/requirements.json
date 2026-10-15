@@ -272,8 +272,8 @@
   {
     "id": "TZ-046",
     "requirement": "Регистрация/вход (через email или VK ID — для удобства школьников).",
-    "status": "внешняя интеграция не подключена; уточнение команды: аккаунтов провайдеров нет",
-    "evidence": "docs/mvp/README.md; backend/app/mail_worker.py"
+    "status": "регистрация и вход по email реализованы; обязательный выбор преподавателя проверен; VK ID не подключён и признан командой необязательным без приложения заказчика",
+    "evidence": "backend/tests/test_registration_teacher.py; output/release/registration-teacher-e2e.json; output/release/live-roles.json; уточнение пользователя об отсутствии приложения VK ID"
   },
   {
     "id": "TZ-047",
@@ -284,8 +284,8 @@
   {
     "id": "TZ-048",
     "requirement": "Привязка руководителя (педагога) — с подтверждением по email.",
-    "status": "связь по личной одноразовой ссылке реализована и проверена; подтверждение по email требует SMTP, которого у команды нет",
-    "evidence": "output/release/mentor-flow.json: подтверждение учеником, одноразовая ссылка; backend/tests/test_mentor_links.py; уточнение пользователя об отсутствии SMTP"
+    "status": "при регистрации обязателен выбор действующего преподавателя или одноразовая личная ссылка с подтверждением ученика; связь и ФИО в дипломе проверены; email-подтверждение требует отсутствующего SMTP",
+    "evidence": "backend/tests/test_registration_teacher.py; backend/tests/test_mentor_links.py; output/release/registration-teacher-e2e.json"
   },
   {
     "id": "TZ-049",

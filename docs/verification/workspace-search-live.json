@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "role": "teacher",
+      "serverSearch": true,
+      "emptyState": true,
+      "focusPreserved": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "expert",
+      "serverSearch": true,
+      "emptyState": true,
+      "focusPreserved": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "admin",
+      "serverSearch": true,
+      "emptyState": true,
+      "focusPreserved": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "commission",
+      "serverSearch": true,
+      "emptyState": true,
+      "focusPreserved": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    }
+  ],
+  "readOnly": true,
+  "errors": []
+}

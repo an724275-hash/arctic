@@ -1,0 +1,55 @@
+{
+  "localIsolatedProjects": 105,
+  "checks": [
+    {
+      "role": "teacher",
+      "searchBeyondFirst100": true,
+      "filterBeforePagination": true,
+      "loadMore": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "expert",
+      "searchBeyondFirst100": true,
+      "filterBeforePagination": true,
+      "loadMore": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "admin",
+      "searchBeyondFirst100": true,
+      "filterBeforePagination": true,
+      "loadMore": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    },
+    {
+      "role": "commission",
+      "searchBeyondFirst100": true,
+      "filterBeforePagination": true,
+      "loadMore": true,
+      "widths": [
+        320,
+        390,
+        834,
+        1440
+      ]
+    }
+  ],
+  "expertReviewStatuses": true,
+  "errors": []
+}

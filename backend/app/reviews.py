@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -23,7 +24,7 @@ from app.models import (
     User,
     utcnow,
 )
-from app.projects import ProjectOut, project_for_access
+from app.projects import ProjectOut, project_for_access, search_projects
 
 router = APIRouter(tags=["reviews"])
 
@@ -253,15 +254,20 @@ def expert_assignments(
     user: User = Depends(require_roles("expert")),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=200),
+    q: str = Query(default="", max_length=200),
+    status: Literal["awaiting", "completed"] | None = None,
 ):
-    rows = db.execute(
+    stmt = (
         select(Assignment, Project, Review)
         .join(Project, Assignment.project_id == Project.id)
         .outerjoin(Review, Review.assignment_id == Assignment.id)
         .where(Assignment.expert_id == user.id)
-        .order_by(Assignment.created_at.desc(), Assignment.id)
-        .offset(offset)
-        .limit(limit)
+    )
+    stmt = search_projects(stmt, q)
+    if status:
+        stmt = stmt.where(Review.id.is_not(None) if status == "completed" else Review.id.is_(None))
+    rows = db.execute(
+        stmt.order_by(Assignment.created_at.desc(), Assignment.id).offset(offset).limit(limit)
     ).all()
     return [
         ExpertAssignmentOut(

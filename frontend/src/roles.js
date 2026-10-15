@@ -25,17 +25,22 @@ export function createWorkspace(state, ui) {
   const isAdmin = () => state.user?.role === 'admin';
   const draftKey = () => `arctic-review-draft:${state.user.id}:${state.work.assignment.id}`;
 
-  async function loadList(append = false) {
+  async function loadList(append = false, filters = state.work) {
     const w = state.work;
+    const query = String(filters.query || '').trim(), status = String(filters.status || '');
+    const params = new URLSearchParams({limit:String(pageSize), offset:String(append ? state.user.role === 'expert' ? w.assignments.length : w.projects.length : 0)});
+    if(query) params.set('q',query);
+    if(status) params.set('status',status);
     if (state.user.role === 'expert') {
-      const rows = await request(`/expert/assignments?offset=${append ? w.assignments.length : 0}&limit=${pageSize}`);
+      const rows = await request(`/expert/assignments?${params}`);
       w.assignments = append ? [...w.assignments, ...rows] : rows;
       w.hasMore = rows.length === pageSize;
     } else {
-      const rows = await request(`/projects?offset=${append ? w.projects.length : 0}&limit=${pageSize}`);
+      const rows = await request(`/projects?${params}`);
       w.projects = append ? [...w.projects, ...rows] : rows;
       w.hasMore = rows.length === pageSize;
     }
+    w.query = query; w.status = status;
   }
 
   async function loadStudents(append = false) {
@@ -254,7 +259,14 @@ export function createWorkspace(state, ui) {
     if (!form.reportValidity() || busy) return true;
     const data = new FormData(form);
     const w = state.work;
-    if (form.id === 'work-filter-form') { w.query = String(data.get('query') || ''); w.status = String(data.get('status') || ''); ui.render(); return true; }
+    if (form.id === 'work-filter-form') {
+      await run(async () => {
+        await loadList(false,{query:data.get('query'),status:data.get('status')});
+        ui.render();
+        document.querySelector('#work-query')?.focus({preventScroll:true});
+      },form);
+      return true;
+    }
     if (form.id === 'ranking-filter-form') { w.rankingNomination = String(data.get('nomination_id') || ''); w.rankingOffset = 0; await run(async () => { await loadRanking(); ui.render(); }, form); return true; }
     if (form.id === 'expert-review-form') {
       if (state.user.role !== 'expert' || !w.assignment || w.assignment.review_submitted) { roleFormMessage(form, 'Эту рецензию уже нельзя редактировать. Обнови страницу.'); return true; }
