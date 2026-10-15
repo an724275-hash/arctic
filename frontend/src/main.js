@@ -372,10 +372,16 @@ async function finishQuiz(expired = false) {
   } catch (error) { state.loading = false; timerFailureAt = performance.now(); render(); toast(error.message); }
   finally { finishPending = false; }
 }
+function showUploadSaved(kind) {
+  const upload = document.querySelector(`[data-upload-kind="${kind}"]`)?.closest('.upload');
+  if (!upload) return;
+  upload.querySelector('p').textContent = 'Файл сохранён';
+  upload.querySelector('.upload-icon').innerHTML = icon('file');
+}
 async function saveProject(form, submit = false) {
   if (!form.reportValidity() || formBusy) return;
   storeProjectInput();
-  if (submit && !state.file && !state.project.files?.some(f => f.kind === 'document')) { currentFormMessage('Добавь основной документ PDF или DOCX перед отправкой.'); return; }
+  if (submit && !state.project.id && !state.file && !state.project.files?.some(f => f.kind === 'document')) { currentFormMessage('Добавь основной документ PDF или DOCX перед отправкой.'); return; }
   await withForm(form, async () => {
     const payload = { title: state.project.title.trim(), abstract: state.project.abstract.trim(), nomination_id: state.project.nomination_id, video_url: state.project.video_url?.trim() || null };
     const id = state.project.id;
@@ -387,16 +393,23 @@ async function saveProject(form, submit = false) {
       const data = new FormData(); data.append('file', state.file); data.append('kind', 'document');
       await request(`/projects/${saved.id}/files`, { method: 'POST', body: data });
       state.file = null;
+      showUploadSaved('document');
     }
     for (const [kind, file] of Object.entries(state.materials)) {
       if (!file) continue;
       const data = new FormData(); data.append('file', file); data.append('kind', kind);
       await request(`/projects/${saved.id}/files`, { method: 'POST', body: data });
       state.materials[kind] = null;
+      showUploadSaved(kind);
     }
     draftDirty = false;
-    if (submit) await request(`/projects/${saved.id}/submit`, { method: 'POST' });
     state.project = await request(`/projects/${saved.id}`);
+    const savedLabel = form.querySelector('#project-save-state');
+    if (savedLabel) savedLabel.textContent = 'Черновик сохранён. Для участия отправь проект.';
+    if (submit) {
+      const submitted = await request(`/projects/${saved.id}/submit`, { method: 'POST' });
+      state.project = {...state.project,...submitted};
+    }
     await navigate(submit ? 'submitted' : 'project', { reload: false, force: true });
     if (submit) playCue('submitted');
     toast(submit ? 'Проект отправлен на проверку.' : 'Черновик и материалы сохранены.');

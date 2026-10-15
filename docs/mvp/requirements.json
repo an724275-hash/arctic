@@ -314,8 +314,8 @@
   {
     "id": "TZ-053",
     "requirement": "Загрузка проекта (II этап):",
-    "status": "требует поэлементной приёмки; наличие кода не считается доказательством полного выполнения",
-    "evidence": ""
+    "status": "подача, возврат и исправление проверены в основном ролевом маршруте; повтор после сбоя submit проверен отдельно без нового выбора и дублирования документа",
+    "evidence": "frontend/test-results/roles-e2e/report.json; docs/verification/project-submit-retry-e2e.json"
   },
   {
     "requirement": "Форма с полями: название, номинация, аннотация, файл (PDF/DOCX), презентация (PDF/PPTX), видеоролик (ссылка или файл).",
@@ -325,8 +325,8 @@
   },
   {
     "requirement": "Валидация форматов и объёма автоматически.",
-    "status": "требует поэлементной приёмки",
-    "evidence": "",
+    "status": "серверные проверки отклоняют неподдерживаемые расширения, подмену формата, пустые/слишком большие файлы и исполняемые вложения Office; временные файлы очищаются. Полноценный антивирусный анализ не реализован",
+    "evidence": "backend/tests/test_projects.py: test_invalid_uploads_leave_no_files, test_oversized_upload_is_bounded_and_cleans_temp_file, test_office_structure_and_embedded_executable_validation; output/release/file-formats-e2e.json",
     "id": "TZ-055"
   },
   {

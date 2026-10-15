@@ -1,0 +1,16 @@
+{
+  "localFictionalAccounts": true,
+  "missingDocumentStopsNewSubmission": true,
+  "temporarySubmitFailure": true,
+  "draftRetained": true,
+  "retryWithoutReselectingFile": true,
+  "singleProject": true,
+  "singleUpload": true,
+  "widths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "errors": []
+}
