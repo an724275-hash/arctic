@@ -47,6 +47,7 @@ let pendingRoute = 'dashboard';
 let toastTimer;
 let answerSave = Promise.resolve();
 let answerRevision = 0;
+let answerEpoch = 0;
 let finishPending = false;
 let formBusy = false;
 let timerFailureAt = -Infinity;
@@ -193,6 +194,14 @@ function setAttempt(attempt, resetQuestion = false) {
   if (resetQuestion) state.question = 0;
   state.question = Math.min(state.question, attempt.questions.length - 1);
 }
+function clearLocalAccount() {
+  setSession(null);
+  state.user = null; state.attempt = null; state.project = null; state.file = null; state.materials = {};
+  state.attempts = []; state.projects = []; state.certificates = []; state.projectReviews = []; state.answers = {};
+  state.saving = false; state.answerError = ''; draftDirty = false;
+  answerEpoch++; answerSave = Promise.resolve();
+  workspace.reset(); control.reset(); profile.reset();
+}
 function storeProjectInput() {
   const form = document.querySelector('#project-form');
   if (!form) return;
@@ -298,8 +307,10 @@ function saveAnswers() {
   state.saving = true; state.answerError = '';
   updateAnswerFeedback();
   const attemptId = state.attempt.id;
+  const epoch = answerEpoch;
   // очередь ответов
   answerSave = answerSave.catch(() => {}).then(async () => {
+    if (epoch !== answerEpoch) return;
     try {
       let revision;
       do {
@@ -313,8 +324,8 @@ function saveAnswers() {
           setAttempt(attempt); state.route = 'result'; render(); return;
         }
       } while (revision !== answerRevision);
-    } catch (error) { state.answerError = error.message; }
-    finally { state.saving = false; updateAnswerFeedback(); }
+    } catch (error) { if (epoch === answerEpoch) state.answerError = error.message; }
+    finally { if (epoch === answerEpoch) { state.saving = false; updateAnswerFeedback(); } }
   });
   return answerSave;
 }
@@ -471,12 +482,15 @@ async function action(name) {
       if (state.user) { state.user = await request('/users/me'); setSession({ ...getSession(), user: state.user }); }
       await navigate(state.user ? 'dashboard' : 'login', { force: true }); toast(reply.message); break;
     }
-    case 'logout':
-      await request('/auth/logout', { method: 'POST' });
-      setSession(null); state.user = null; state.attempt = null; state.project = null; state.file = null; state.materials = {}; draftDirty = false;
-      workspace.reset();
-      control.reset();profile.reset();
-      return navigate('home', { force: true });
+    case 'logout': {
+      let confirmed = false;
+      try { await request('/auth/logout', { method: 'POST' }); confirmed = true; }
+      catch { /* очищаем эту вкладку */ }
+      clearLocalAccount();
+      await navigate('home', { force: true });
+      if (!confirmed) toast('Вы вышли из этой вкладки. Сервер не подтвердил завершение остальных сессий.');
+      return;
+    }
     case 'menu':
       if (dialog.open) dialog.close();
       dialog.classList.add('menu-dialog');
@@ -610,9 +624,7 @@ document.addEventListener('keydown', event => {
   }
 });
 window.addEventListener('session-expired', () => {
-  control.reset();profile.reset();
-  state.user = null; state.saving = false; state.answerError = ''; state.attempt = null; state.project = null; state.file = null; state.materials = {}; draftDirty = false;
-  workspace.reset();
+  clearLocalAccount();
   if (protectedRoutes.has(state.route)) { pendingRoute = 'dashboard'; void navigate('login', { force: true }); toast('Сессия закончилась. Войди снова, чтобы продолжить.'); }
 });
 function followHistory() {

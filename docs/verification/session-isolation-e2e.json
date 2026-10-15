@@ -1,0 +1,11 @@
+{
+  "localFictionalAccounts": true,
+  "offlineLogoutClearsTab": true,
+  "lateAnswerIgnoredAfterLogout": true,
+  "offlineLogoutDoesNotClaimServerRevocation": true,
+  "protectedRouteReturnsToLogin": true,
+  "realRefreshRetriedOnce": true,
+  "onlineLogoutRevokesAccess": true,
+  "onlineLogoutRevokesRefresh": true,
+  "errors": []
+}
