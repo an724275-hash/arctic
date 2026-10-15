@@ -199,7 +199,7 @@ export function createWorkspace(state, ui) {
       if (pending.kind === 'review') {
         await request(`/expert/assignments/${pending.assignmentId}/review`, { method: 'POST', body: pending.payload });
         sessionStorage.removeItem(draftKey()); dirty = false;
-        await reloadAfter('Твоя рецензия принята и сохранена на сервере.');
+        await reloadAfter('Рецензия отправлена.');
       }
       confirmation = null;
     });
@@ -260,7 +260,7 @@ export function createWorkspace(state, ui) {
       if (state.user.role !== 'expert' || !w.assignment || w.assignment.review_submitted) { roleFormMessage(form, 'Эту рецензию уже нельзя редактировать. Обнови страницу.'); return true; }
       const draft = captureReviewDraft(true);
       if (draft.comment.trim().length < 10) { roleFormMessage(form, 'Добавь комментарий не короче 10 символов.'); return true; }
-      confirm('review', { scores: draft.scores, comment: draft.comment.trim() }, 'Отправить окончательную рецензию?', 'После отправки оценки и комментарий нельзя изменить. Предварительный итог будет проверен сервером.'); return true;
+      confirm('review', { scores: draft.scores, comment: draft.comment.trim() }, 'Отправить окончательную рецензию?', 'После отправки оценки и комментарий нельзя изменить.'); return true;
     }
     if (!isAdmin()) { roleFormMessage(form, 'Это действие доступно только организатору.'); return true; }
     if (form.id === 'moderation-form') {

@@ -11,6 +11,28 @@
 .award-row { animation:route-arrive 220ms ease-out both; }
 .certificate-dialog[open] { animation:menu-arrive 180ms ease-out; }
 .preparation-topics a .icon,.cabinet-tools a .icon { transition:transform 140ms ease-out; }
+@media(prefers-reduced-motion:no-preference) {
+  .scene-enter { animation:page-arrive 240ms cubic-bezier(.2,.7,.3,1); }
+  dialog[open]:not(.certificate-dialog) { animation:dialog-arrive 180ms ease-out; }
+  dialog[open]::backdrop { animation:backdrop-arrive 180ms ease-out; }
+  .stage-requirements[open]>p,.account-creation[open]>form { animation:route-arrive 180ms ease-out; }
+  .assistant-message { animation:message-arrive 160ms ease-out; }
+  .button,.round-icon,.password-toggle,.nav-group>summary,.workspace-tabs a,.console-sidebar a {
+    transition:background-color 160ms ease-out,border-color 160ms ease-out,color 160ms ease-out,transform 100ms ease-out;
+  }
+  input,textarea,select,.answer { transition:border-color 160ms ease-out,background-color 160ms ease-out,box-shadow 160ms ease-out; }
+  .text-link .icon,.public-action .button .icon,.reading-shelf>a>.icon { transition:transform 160ms ease-out; }
+  .button:active:not(:disabled),.round-icon:active:not(:disabled) { transform:translateY(1px); }
+  .stage-meter>span { transform-origin:left; animation:meter-arrive 320ms ease-out; }
+  @media(hover:hover) {
+    .text-link:hover .icon,.public-action .button:hover .icon,.reading-shelf>a:hover>.icon { transform:translateX(3px); }
+  }
+}
+@keyframes page-arrive { from { opacity:.65; } to { opacity:1; } }
+@keyframes dialog-arrive { from { opacity:.5; transform:translateY(6px) scale(.99); } to { opacity:1; transform:none; } }
+@keyframes backdrop-arrive { from { opacity:0; } to { opacity:1; } }
+@keyframes message-arrive { from { opacity:.5; transform:translateY(3px); } to { opacity:1; transform:none; } }
+@keyframes meter-arrive { from { transform:scaleX(.85); } to { transform:scaleX(1); } }
 @media(hover:hover) {
   .preparation-topics a:hover .icon,.cabinet-tools a:hover .icon { transform:translateX(3px); }
 }

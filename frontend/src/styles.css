@@ -228,7 +228,7 @@ input::placeholder, textarea::placeholder { color: #687d85; opacity: 1; }
 .backlink:hover { text-decoration: underline; text-underline-offset: 4px; }
 .view-header-icon { display: none; place-items: center; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--green); }
 .view-header-icon .icon { width: 24px; height: 24px; }
-.bottom-nav { display: none; }
+.mobile-nav { display: none; }
 .toast { position: fixed; z-index: 40; left: 50%; bottom: 24px; max-width: calc(100% - 32px); padding: 14px 20px; border: 1px solid #54727e; border-radius: 10px; background: var(--blue-dark); color: var(--paper); font-size: 14px; box-shadow: 0 6px 20px #18384720; opacity: 0; transform: translate(-50%, 16px); pointer-events: none; transition: opacity 160ms, transform 160ms; }
 .toast.visible { opacity: 1; transform: translate(-50%, 0); }
 dialog { width: calc(100% - 32px); max-width: 540px; max-height: calc(100dvh - 48px); padding: 32px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 24px 80px #172d3433; }
@@ -295,10 +295,10 @@ dialog .dialog-actions .button { flex: 1; padding: 13px 16px; }
   .article-row h3 { font-size: 15px; }
   .footer { align-items: start; flex-direction: column; gap: 8px; margin-top: 40px; padding-top: 20px; font-size: 11px; }
   .footer-links { gap: 20px; }
-  .bottom-nav { display: flex; justify-content: space-around; gap: 4px; margin-top: 16px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
-  .bottom-nav a { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 56px; padding: 8px; border-radius: 8px; color: var(--muted); font-size: 11px; }
-  .bottom-nav a.active { background: var(--ice); color: var(--blue-dark); }
-  .bottom-nav .icon { width: 20px; height: 20px; }
+  .mobile-nav { display: flex; justify-content: space-around; gap: 4px; margin-top: 16px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+  .mobile-nav a { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 56px; padding: 8px; border-radius: 8px; color: var(--muted); font-size: 11px; }
+  .mobile-nav a.active { background: var(--ice); color: var(--blue-dark); }
+  .mobile-nav .icon { width: 20px; height: 20px; }
   .page-heading { align-items: start; gap: 16px; margin: 12px 0 24px; }
   .page-heading h1 { font-size: 32px; font-weight: 650; letter-spacing: -.8px; }
   .page-heading p { font-size: 14px; margin-top: 10px; }

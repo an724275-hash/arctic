@@ -70,3 +70,12 @@ dialog::backdrop { background:rgba(24,56,71,.38); }
   .shell .header-actions { gap:2px; }
   .shell .header-actions>.account-button { min-width:44px; min-height:44px; padding:4px; }
 }
+.site-topbar { display:contents; }
+@media(max-width:700px) {
+  .site-topbar { display:block; position:sticky; top:8px; z-index:20; margin:12px 0 22px; background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:0 4px 16px #1838470a; }
+  .shell .site-topbar .header { position:static; margin:0; border:0; box-shadow:none; background:transparent; }
+  .shell .mobile-nav { margin:0; padding:4px; border:0; border-top:1px solid var(--line); border-radius:0 0 10px 10px; }
+  .shell .mobile-nav a { min-height:44px; flex-direction:row; gap:6px; padding:8px 4px; font-size:12px; }
+  .shell .mobile-nav .icon { width:17px; height:17px; }
+  html { scroll-padding-top:148px; }
+}

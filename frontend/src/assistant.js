@@ -55,7 +55,7 @@ function scheduleDock() {
   dockFrame = requestAnimationFrame(() => {
     dockFrame = 0;
     if (!widget || widget.classList.contains('keyboard-open')) return;
-    const nav = document.querySelector('.bottom-nav');
+    const nav = document.querySelector('.mobile-nav');
     const previous = parseFloat(widget.style.getPropertyValue('--assistant-extra-bottom')) || 0;
     const base = parseFloat(getComputedStyle(widget).bottom) - previous;
     const height = widget.querySelector('.assistant-tools').getBoundingClientRect().height;

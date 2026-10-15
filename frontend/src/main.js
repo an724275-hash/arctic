@@ -9,7 +9,7 @@ import './release.css';
 import { toggleSound, playCue } from './sound.js';
 import { request, download, getSession, setSession } from './api.js';
 import { escapeHtml as e, icon, button, act } from './ui.js';
-import { views, header, footer, errorBox, timerText } from './views.js';
+import { views, header, footer, mobileNavigation, errorBox, timerText } from './views.js';
 import { roleViews } from './role-views.js';
 import { createWorkspace } from './roles.js';
 import { readRoute, routeUrl, pageTitles } from './routes.js';
@@ -49,6 +49,7 @@ let draftDirty = false;
 let activeUrl = `${location.pathname}${location.search}${location.hash}`;
 let activeHistoryIndex = Number.isInteger(history.state?.arcticIndex) ? history.state.arcticIndex : 0;
 let restoringHistory = false;
+let animatedPage = '';
 const workspace = createWorkspace(state, { render, navigate, toast, modal });
 const control = createConsole(state,{render,toast,modal,reloadPublic:loadPublic});
 const profile = createProfile(state,{render,toast});
@@ -75,7 +76,10 @@ function writeRoute(route, mode = 'replace') {
 function render(scroll = false) {
   const page = state.loading ? '<section class="panel loading-panel" role="status"><span class="loader"></span><h1>Загружаем страницу…</h1></section>' : state.error ? errorBox(state.error) : routeViews[state.route](state);
   const body = ['workspace','review-project','rankings',...consoleRoutes].includes(state.route) ? consoleFrame(state,page) : page;
-  app.innerHTML = `<div class="shell">${header(state)}<main id="content" class="scene-enter">${body}</main>${footer(state)}</div>`;
+  const pageKey = `${state.route}/${state.articleSlug || ''}/${state.attempt?.id || ''}`;
+  const enter = !state.loading && pageKey !== animatedPage;
+  if (!state.loading) animatedPage = pageKey;
+  app.innerHTML = `<div class="shell"><div class="site-topbar">${header(state)}${mobileNavigation(state)}</div><main id="content"${enter ? ' class="scene-enter"' : ''}>${body}</main>${footer(state)}</div>`;
   document.title = `${state.route === 'article' && state.article ? state.article.title : pageTitles[state.route] || 'Арктика'} | Арктика`;
   app.querySelectorAll('a[data-route]').forEach(link => { link.href = routeUrl(link.dataset.route); });
   if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
@@ -97,16 +101,32 @@ function updateSeo(){
   if(state.route==='article'&&state.article){const script=document.createElement('script');script.type='application/ld+json';script.id='article-schema';script.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:state.article.title,description,mainEntityOfPage:canonical.href,author:{'@type':'Organization',name:'asa team'},image:location.origin+(state.article.image||'/assets/arctic-coast.webp')});document.head.append(script);}
 }
 let revealObserver;
+let revealedPage = '';
+const revealedSections = new Set();
 function revealSections() {
   revealObserver?.disconnect();
+  const page = `${state.route}/${state.articleSlug || ''}`;
+  if (page !== revealedPage) { revealedSections.clear(); revealedPage = page; }
   if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   revealObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); revealObserver.unobserve(entry.target); }
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealedSections.add(entry.target.dataset.revealIndex);
+        revealObserver.unobserve(entry.target);
+      }
     });
   }, { threshold: 0.08 });
-  app.querySelectorAll('.discovery-editorial, .journey-section, .home-materials, .public-section').forEach(section => {
-    section.classList.add('reveal-section'); revealObserver.observe(section);
+  app.querySelectorAll('.discovery-editorial, .journey-section, .home-materials, .public-section').forEach((section, index) => {
+    section.dataset.revealIndex = String(index);
+    section.classList.add('reveal-section');
+    if (revealedSections.has(String(index))) section.classList.add('is-visible');
+    else revealObserver.observe(section);
+    section.addEventListener('focusin', () => {
+      section.classList.add('is-visible');
+      revealedSections.add(String(index));
+      revealObserver.unobserve(section);
+    }, { once: true });
   });
 }
 async function printCertificate(id) {
@@ -285,7 +305,7 @@ function saveAnswers() {
 }
 function updateAnswerFeedback() {
   const label = document.querySelector('.save-state');
-  if (label) label.textContent = state.saving ? 'Сохраняем ответ…' : state.answerError ? 'Ответ пока не сохранён' : 'Ответы сохранены на сервере';
+  if (label) label.textContent = state.saving ? 'Сохраняем ответ…' : state.answerError ? 'Ответ пока не сохранён' : 'Сохранено';
   document.querySelectorAll('[data-action="finish"]').forEach(button => { button.disabled = state.saving; });
   const next = document.querySelector('[data-action="next"]');
   if (next) next.disabled = Boolean(state.answerError);
@@ -322,7 +342,7 @@ async function finishQuiz(expired = false) {
     setAttempt(await request(`/quiz/attempts/${state.attempt.id}/submit`, { method: 'POST', body: { answers: state.answers } }));
     await navigate('result', { reload: false, force: true });
     playCue('complete');
-    if (expired) toast('Время закончилось. Сервер учёл ответы, сохранённые до дедлайна.');
+    if (expired) toast('Время закончилось. Сохранённые ответы учтены.');
   } catch (error) { state.loading = false; timerFailureAt = Date.now(); render(); toast(error.message); }
   finally { finishPending = false; }
 }
