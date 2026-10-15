@@ -1,3 +1,4 @@
+import {installInteractionMotion} from './interactions.js';
 import {mobileMenu} from './mobile-menu.js';
 import {testEntry} from './test-entry.js';
 import {installPresence, syncPresence} from './presence.js';
@@ -223,7 +224,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
   state.route = next; state.error = ''; state.loading = (protectedRoutes.has(next) || consoleRoutes.has(next) || next === 'article') && reload;
   if (next === 'article') state.articleSlug = id || '';
   writeRoute(routeHash(next, id), historyMode);
-  render(true);
+  if (state.loading) render(true);
   try {
     if (reload) {
       if (next === 'article') state.article = articles[id] || await request(`/content/${encodeURIComponent(id)}`, { auth: false });
@@ -262,7 +263,7 @@ async function navigate(next, { reload = true, id, force = false, historyMode = 
       }
     }
     if (nav !== navigation) return;
-    state.loading = false; writeRoute(routeHash(state.route)); render();
+    state.loading = false; writeRoute(routeHash(state.route)); render(true);
     document.querySelector('#content h1')?.focus({ preventScroll: true });
   } catch (error) {
     if (nav !== navigation || error.status === 401) return;
@@ -625,6 +626,7 @@ async function boot() {
   }
   await navigate(readRoute(location), { force: true, historyMode: 'replace' });
 }
+installInteractionMotion();
 installNavigationPolish();
 installAssistant(() => state.route);
 installContact();
